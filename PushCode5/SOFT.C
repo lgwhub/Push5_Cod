@@ -315,9 +315,9 @@ void Default_ParamInit(void)
 
 	
 #if CONFIG_CC1100
-	gpParam->RemotName[0]=0x35;
-	gpParam->RemotName[1]=0x35;
-	gpParam->RemotName[2]=0x36;	
+	gpParam->RemotName[0]=0x31;
+	gpParam->RemotName[1]=0x32;
+	gpParam->RemotName[2]=0x33;	
 	//gpParam->xxx[0]=0x0;
 	//gpParam->xxx[1]=0x0;
 #elif CONFIG_433SG
@@ -559,6 +559,7 @@ void Execute(uchar cmd)
 					break;
 												
 					case REMOT_COMMAND_POWER_ON:
+					case REMOT_COMMAND_PUSH_POWER_ON:
 							Motor.FlagPower=90; //3分钟	
 					break;
 					
@@ -568,18 +569,20 @@ void Execute(uchar cmd)
 																Motor.CommandType=0;
 																Motor.CurrentType=0;													
 					break;
-//				case REMOT_COMMAND_SET_RATE3:	//设置电流
+				case REMOT_COMMAND_SET_RATE3:	//设置电流
 
-//				Motor.FlagPower=90; //4分钟
-//																
-//					if(	FlagSetCurrent1==0)
-//								{
-//								if((Motor.FlagRuning)&&(InputBuf==0x0f)&&(FlagInputZero>0))
-//												{
-//													FlagSetCurrent1=1;
-//												}
-//								}
-//				break;
+				
+																
+					if(	FlagSetCurrent1==0)
+								{
+								if((Motor.FlagRuning)&&(InputBuf==0x0f)&&(FlagInputZero>0))
+												{
+													Motor.FlagPower=90; //4分钟
+													FlagSetCurrent1=1;
+													TimeDebug=120;
+												}
+								}
+				break;
 															
 															//控制器在操作
 					case REMOT_COMMAND_MOT1_CW:
@@ -875,7 +878,7 @@ void ProcessKey(uchar in,uchar old)
 							if((in&BIT2)==0)
 										{
 										TimeDebug=30;	
-											
+										ParamSend();	
 											if(FlagSetCurrent1==0)	
 												{
 												
@@ -1049,6 +1052,7 @@ static uchar tim1000ms;
 			if(FlagSetCurrent1==3)
 				{
 					FlagSetCurrent1=0;
+					//FlagSetCurrent1=4;
 					Motor.FlagRuning=0;
 					Motor.CommandType=0;
 					Motor.CurrentType=0;
@@ -1267,11 +1271,30 @@ void SendUartRespone(void)		//%B 转发的返回信息
 	
 }
 /////
+void SendParamBuf(void)
+{
+uchar i;
+SendText_UART0("ParamBuf....");	
+	
+for(i=0;i<Max_Param_Len;i++)
+		{
+		
+		Uart0CharSend(HexToAsc(gbParamBuf[i]>>4));
+		Uart0CharSend(HexToAsc(gbParamBuf[i]));
+		
+		Uart0CharSend(0x20);
+		}
+SendText_UART0("\r\n");	
+}
+/////
 void ParamSend(void)
 {
 	uchar len;
 	//uchar i;
 	uchar  buf[60];
+
+SendParamBuf();
+
 
 	len		=	PutString("&ED,",buf,5);								//head 4
 	len		+=	MakeValAsc8("I1=",gpParam->bCurrentForward,",",&buf[len]);	//
@@ -1324,7 +1347,7 @@ void AutoSend(void)
 	//uchar i;
 	uchar temp;
 	
-	uchar buf[60];
+	uchar buf[66];
 	len		=	PutString("&EA,",buf,5);								//head 4
 	buf[len]=HexToAsc(Motor.FlagRuning);		//foreward向前正转1,backward向后2
 	//buf[len]=HexToAsc(FlagInputZero);
@@ -1334,9 +1357,9 @@ void AutoSend(void)
 	len++;
 	
 	len		+=	MakeValAsc8("I=",chAdc_Resoult7,",",&buf[len]);	//电流100ma
-	len		+=	MakeValAsc8("F=",bExCurrentForwardMax,",",&buf[len]);	//adj
-	len		+=	MakeValAsc8("B=",bExCurrentBackwardMax,",",&buf[len]);	//比较电流100ma
-	
+	//len		+=	MakeValAsc8("F=",bExCurrentForwardMax,",",&buf[len]);	//adj
+	//len		+=	MakeValAsc8("B=",bExCurrentBackwardMax,",",&buf[len]);	//比较电流100ma
+	len		+=	MakeValAsc8("k=",gpParam->bCurrentRate,",",&buf[len]);
 	//len		+=	MakeValAsc8("9=",bExCurrentBackwardPer94,",",&buf[len]);	//比较电流100ma
 	//len		+=	MakeValAsc8("7=",bExCurrentBackwardPer85,",",&buf[len]);	//比较电流100ma
 	

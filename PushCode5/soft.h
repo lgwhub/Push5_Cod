@@ -187,7 +187,7 @@ struct	struct_save
 
 extern struct	struct_save *gpParam;
 //#define Max_Param_Len		8
-#define Max_Param_Len		10
+#define Max_Param_Len		12
 //参数已经初始化标记
 #define FlagParamInitnized	0xA9
 extern uchar gbParamBuf[Max_Param_Len+2];

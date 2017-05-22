@@ -207,6 +207,15 @@ Init_Hd();
 InitAdc();
 LedStart();
 
+#if EnWdog
+asm("wdr");
+#endif
+DelayMs(200);
+
+#if EnWdog
+asm("wdr");
+#endif
+
 if(K5_LVL==0)
 		{
 			DelayMs(5);
@@ -307,10 +316,14 @@ void EEPROM_Write(unsigned int iAdr,unsigned char bDat)
 {
 	uint16 i;
 	i=0;
-	while( (i<30000) && (EECR & (1<<EEWE)) )
+	while( (i<50000) && (EECR & (1<<EEWE)) )
 		{//等待前一次操作完成
 			i++;
 		}
+	while( (i<50000) && (EECR & (1<<EEWE)) )
+		{//等待前一次操作完成
+			i++;
+		}		
 EEAR = iAdr;
 EEDR	=	bDat;
 EECR	|=	(1<<EEMWE);		//写EEMWE位，允许EEPROM操作
@@ -324,7 +337,7 @@ unsigned char EEPROM_Read(unsigned int iAdr)
 {
 	uint16 i;
 	i=0;
-	while( (i<30000) && (EECR & (1<<EEWE)) )
+	while( (i<50000) && (EECR & (1<<EEWE)) )
 		{//等待前一次操作完成
 			i++;
 		}
@@ -391,7 +404,7 @@ void Load_Param(void)
 		
 	if(p->flag!=FlagParamInitnized)
 		{//EEPROM参数初始化
-			if((p->flag==0xff)||(p->flag==0))
+			//if((p->flag==0xff)||(p->flag==0))
 							{
 							Write_Param();
 							}
