@@ -3,7 +3,7 @@
 #include "config.h"
 #include "soft.h"
 #include "main.h"
-#include "Hd_ElecPush3.H"
+#include "Hd_ElecPush5.H"
 #include "Mega48_Adc.h"
 
 #include "CC1100.h"
@@ -715,7 +715,7 @@ void ProcessKey(uchar in,uchar old)
 				
 			#endif
 			
-			if( (in&BIT2)!=(old&BIT2) )	//是边沿
+			if( (in&BIT2)!=(old&BIT2) )	//是边沿K3 ,Set Current
 						{
 							if((in&BIT2)==0)
 										{
@@ -727,19 +727,12 @@ void ProcessKey(uchar in,uchar old)
 																{
 																	FlagSetCurrent1=1;
 																}
-													/*
-													Motor.FlagRuning=0;
-													Motor.CommandType=COMMAND_C1;		//按第一路正转
-													FlagAuto=1;//非点动方式
-													Motor.TimePer94=0;
-													Motor.iTimePer85=0;
-													Motor.RunTime=0;	//60s自动关掉
-													*/
+
 												}
 										}
 						}			
 			
-			if( (in&BIT4)!=(old&BIT4) )	//是边沿
+			if( (in&BIT4)!=(old&BIT4) )	//是边沿K5 SetId
 						{
 							if((in&BIT4)==0)
 										{			
@@ -753,14 +746,14 @@ void ProcessKey(uchar in,uchar old)
 /////
 void CheckKey(void)		//周期10ms
 {
-		
+		/*
 				if(K1_LVL)
 						KeybyteCur	|=	BIT0;
 				else	KeybyteCur	&=	(~BIT0);
 				if(K2_LVL)
 						KeybyteCur	|=	BIT1;
 				else	KeybyteCur	&=	(~BIT1);
-				
+				*/
 				if(K3_LVL)
 						KeybyteCur	|=	BIT2;
 				else	KeybyteCur	&=	(~BIT2);

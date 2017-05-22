@@ -20,6 +20,13 @@
 #define Config_Al_Box		1
 
 
+//IOCFG0_DIV128;				//测试晶体频率
+#define CONFIG_26MHZ_OSC_OUT		1
+		
+//FREQ0_ADJ_260018;		//除以1.000153  新模块晶振偏高 	
+#define USER_NEW_OSC		1
+
+
 
 //电机最长运行时间
 //#define MAX_RUN_TIME_sec	(72)

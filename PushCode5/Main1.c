@@ -8,7 +8,7 @@
 
 
 
-#include "Hd_ElecPush3.H"
+#include "Hd_ElecPush5.H"
 
 	#if IAR_SYSTEM
 		#include "iom88v.h"
@@ -207,6 +207,10 @@ Led1_Enable;
 K1_PULLUP;
 K2_PULLUP;
 K3_PULLUP;
+K4_PULLUP;
+K5_PULLUP;
+
+
 
 Led2_Enable;	//选择铝箱体指示灯SetLed2
 
