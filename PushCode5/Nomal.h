@@ -45,7 +45,7 @@ uchar MakeValAsc8(uchar *StrHead,uchar Val,uchar *StrEnd,uchar *out);	//8Î»±äÁ¿×
 
 //uchar IsNumberAsc(uchar x);   /* ÅÐ¶ÏÊÇ·ñÎªÊý×Ö0~9 */
 uchar HexToAsc(uchar x);   /*  1/2hex>>1asc2   */
-//uchar AscToHex(uchar x); 
+uchar AscToHex(uchar x); 
 //uint16 NumberAscStringToInt16(uchar *p);	//×î¶à5Î»ASCÂëµÄÊý×Ö×Ö·û´®×ª»»Îª16Î»ÎÞ·ûºÅÕûÐÍ
 //uchar MakeValHex16(uchar *StrHead,uint Val,uchar *StrEnd,uchar *out);	//16Î»±äÁ¿×ª»»ÎªHEXµÄASCÂë£¬ÓÐÇ°ºó×º
 uchar PutString(uchar *ps,uchar *pd,uchar max_ps) ;

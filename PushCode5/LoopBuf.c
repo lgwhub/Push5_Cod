@@ -6,8 +6,8 @@
 #include "LoopBuf.h"
 
 
-//uchar Uart0RecvBuf[UART0_RECV_BUF_SIZE+6];	//串口0接收缓冲区
-//_loopbuf Uart0RecvStruct;
+uchar Uart0RecvBuf[UART0_RECV_BUF_SIZE+6];	//串口0接收缓冲区
+_loopbuf Uart0RecvStruct;
 uchar Uart0SendBuf[UART0_SEND_BUF_SIZE+6];	//串口0发缓冲区
 _loopbuf Uart0SendStruct;
 

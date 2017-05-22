@@ -1,7 +1,7 @@
 #ifndef __LOOP_BUF_H
 #define __LOOP_BUF_H
-#define UART0_RECV_BUF_SIZE	36
-#define UART0_SEND_BUF_SIZE	38
+#define UART0_RECV_BUF_SIZE	20
+#define UART0_SEND_BUF_SIZE	32
 //#define	SizeDataType	unsigned short int
 #define	SizeDataType	unsigned char
 
@@ -21,8 +21,8 @@ unsigned char GetLoopbuf(_loopbuf *st,uchar *buf,SizeDataType BufSize,uchar *chr
 
 
 
-//extern uchar Uart0RecvBuf[UART0_RECV_BUF_SIZE+6];	//串口0接收缓冲区
-//extern _loopbuf Uart0RecvStruct;
+extern uchar Uart0RecvBuf[UART0_RECV_BUF_SIZE+6];	//串口0接收缓冲区
+extern _loopbuf Uart0RecvStruct;
 extern uchar Uart0SendBuf[UART0_SEND_BUF_SIZE+6];	//串口0接收缓冲区
 extern _loopbuf Uart0SendStruct;
 

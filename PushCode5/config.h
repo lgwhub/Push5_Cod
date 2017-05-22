@@ -67,6 +67,11 @@
 #define PWM_MAX_VAL			250
 //Fpwm=Fosc/2/64/PWM_MAX_VAL = 122HZ
 
+
+//Íâ²¿¾§Õñ
+#define CONFIG_EXT_4MHZ_OSC		1
+
+
 #define Fosc	  (8000000/2)
 #define	BAUD_DEFINE(baud)	(Fosc/8/(baud))-1	
 

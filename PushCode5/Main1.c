@@ -207,9 +207,6 @@ Init_Hd();
 InitAdc();
 LedStart();
 
-
-
-
 if(K5_LVL==0)
 		{
 			DelayMs(5);
@@ -639,19 +636,126 @@ void Init_Timer1_PWM(void)
 	#endif
 }
 /////
+void OSCCAL_calibration(void)
+{
+	/*
+		unsigned char step=0;
+    unsigned char calibrate = FALSE;
+    int temp;
+    unsigned char tempL;
+    
+    int TestCount1,TestCount2;	//测试用
+    TestCount1=0;
+    TestCount2=0;
+
+    CLKPR = (1<<CLKPCE);        // set Clock Prescaler Change Enable
+    // set prescaler = 8, Inter RC 8Mhz / 8 = 1Mhz
+    CLKPR = (1<<CLKPS1) | (1<<CLKPS0);
+    
+    TIMSK2 = 0;             //disable OCIE2A and TOIE2
+
+    ASSR = (1<<AS2);        //select asynchronous operation of timer2 (32,768kHz)
+    
+    OCR2A = 200;            // set timer2 compare value 
+
+    TIMSK0 = 0;             // delete any interrupt sources
+
+        
+    TCCR1B = (1<<CS10);     // start timer1 with no prescaling
+    TCCR2A = (1<<CS20);     // start timer2 with no prescaling
+
+    //while((ASSR & 0x01) | (ASSR & 0x04));       //wait for TCN2UB and TCR2UB to be cleared
+tempL=(ASSR & 0x01) | (ASSR & 0x04);
+
+
+    Delay(1000);    // wait for external crystal to stabilise
+    
+    while(!calibrate)
+    {
+        __disable_interrupt();  // disable global interrupt
+        
+        TIFR1 = 0xFF;   // delete TIFR1 flags
+        TIFR2 = 0xFF;   // delete TIFR2 flags
+        
+        TCNT1H = 0;     // clear timer1 counter
+        TCNT1L = 0;
+        TCNT2 = 0;      // clear timer2 counter
+           
+        while ( !(TIFR2 & (1<<OCF2A)) );   // wait for timer2 compareflag
+    
+        TCCR1B = 0; // stop timer1
+
+        __enable_interrupt();  // enable global interrupt
+    
+        if ( (TIFR1 & (1<<TOV1)) )
+        {
+            temp = 0xFFFF;      // if timer1 overflows, set the temp to 0xFFFF
+        }
+        else
+        {   // read out the timer1 counter value
+            tempL = TCNT1L;
+            temp = TCNT1H;
+            temp = (temp << 8);
+            temp += tempL;
+        }
+    
+//        if (temp > 6250)
+//        {
+//            OSCCAL--;   // the internRC oscillator runs to fast, decrease the OSCCAL
+//        }
+//        else if (temp < 6120)
+//        {
+//            OSCCAL++;   // the internRC oscillator runs to slow, increase the OSCCAL
+//        }
+//        else
+//            calibrate = TRUE;   // the interRC is correct
+    if (step==0)
+		    	{//第一步
+		    	if (temp < 6750)		//先调高20%
+		    			{
+		    			if(OSCCAL<0X7A)	//最大0X7F
+		    					OSCCAL+=5;
+		    			else step=1;
+		    			}
+		    	 else step=1;
+		    	 
+		    	 TestCount1++;	
+		    	}
+    else  //(step!=0)
+    	{	//第二步
+		    if (temp > 6160)		//	200/32768=6103us
+		        {
+		           if( OSCCAL>0)
+		            		OSCCAL--;   // the internRC oscillator runs to fast, decrease the OSCCAL
+		        		else
+		    						calibrate = TRUE;   // the interRC is correct
+		        }
+		    else
+		    		calibrate = TRUE;   // the interRC is correct
+		    TestCount2++;
+    		}
+    		
+        TCCR1B = (1<<CS10); // start timer1
+    }
+*/
+}
+
+/////
 void Init_Hd(void)
 {
 
-	/*
+#if CONFIG_EXT_4MHZ_OSC
+//外部晶振
 	CLKPR=0X80;	//1000 0000不分频
 //	CLKPR=0X10;	//1000 0000
 	CLKPR=0X00;	//0000 0000
-	*/
 	
+#else
+//内部晶振	
 	CLKPR=0X80;	//1000 0000	二分频
 	//CLKPR=0X01;	//1000 0001
 	CLKPR=0X01;	//0000 0001
-	
+#endif	
 	
 	
 	Init_GPIO();
@@ -664,14 +768,14 @@ void Init_Hd(void)
 			{
 			OSCCAL = OSSCAL_AT_MEGA48_FLASH;
 			}
-
+#endif
 		
 	/////
 	ClearLoopBuf(&Uart0SendStruct,UART0_SEND_BUF_SIZE);	//清除环型缓冲区
 Init_Uart(BAUD_DEFINE(9600),0);
 //	Init_Uart(BAUD_DEFINE(9400),0);
 	//Init_Uart(BAUD_DEFINE(9200),0);
-	#endif
+	
 	
 	//InitAdc();
 	Init_Timer0();
@@ -778,14 +882,14 @@ void uart0_rxd_isr(void)
 #endif
 {
 
-/*
+
 	unsigned char temp;	
 	
 	temp	=	UDR0;
 	
 	
 	AddLoopBuf(&Uart0RecvStruct,Uart0RecvBuf,UART0_RECV_BUF_SIZE,temp);	//加入到环型缓冲区
-*/
+
 
 
 
@@ -1229,11 +1333,34 @@ void LedContral(void)  /* 亮灭转换  */
 				if(Time_LedRecv_LED>0)
 						{
 							Time_LedRecv_LED--;
-							if(Time_LedRecv_LED==0)
+							#if Config_Al_Box					
+								if(K4_LVL)
 										{
-											LED_RECV_OFF;	
+											//SetLed2;	//跳线不连接表示铝箱体
+											LED_Fe_Box;  //信号时候暗
 										}
+							else{
+											//ClrLed2;	//跳线连接表示铁箱体
+											LED_Al_Box;  //信号时候亮
+									}
+							#endif
+										
 						}
+				else{
+							#if Config_Al_Box					
+								if(K4_LVL)
+										{
+											//SetLed2;	//跳线不连接表示铝箱体
+											LED_Al_Box;  //平常时候亮
+										}
+							else{
+											//ClrLed2;	//跳线连接表示铁箱体
+											LED_Fe_Box;  //平常时候暗
+									}
+							#endif					
+							//LED_RECV_OFF;	
+							}		
+						
 #if CONFIG_433SG						
 				if(Time_TestProc_LED1>0)
 						{

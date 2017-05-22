@@ -25,6 +25,7 @@
 uchar bTimeBase;
 
 uint16 giCodeChecksum;
+uchar FlagGetUartOk;
 
 ReInitCC1100Time=0;
 unsigned char Time_LedRecv_LED;
@@ -146,9 +147,17 @@ buf[32]=0x00;
 		#endif	
 }
 
-
-
-
+///////
+uchar GetOneFromUart0(uchar *buf)
+{
+	if(Uart0RecvStruct.len)
+			{
+			GetLoopbuf(&Uart0RecvStruct,Uart0RecvBuf,UART0_RECV_BUF_SIZE,buf);
+			return 1;
+			}
+	else 	return 0;
+}
+///////
 void SendText_UART0(INT8U *StrData)
 {
 	uchar i;
@@ -159,7 +168,135 @@ void SendText_UART0(INT8U *StrData)
 	  }	
 	
 }
+///////
 
+void ProcessUartCommand(uchar *buf,uchar len)
+{
+uchar i,sum,temp;
+	if(len<3)return;
+	if(*buf!='%')return;
+
+	switch(*(buf+1))
+		{
+			case 'K':
+			//分机接收到主机命令
+			sum=0;
+			for(i=0;i<8;i++)
+					{
+					sum+=*(buf+i);
+					}	
+			
+			if((AscToHex(*(buf+8))*0x10+AscToHex(*(buf+9)))==sum)
+					{
+//					UartLinkTimeout=0;
+//					if(*(buf+3)=='0')
+//							Motor.FlagLineContral=0;
+//					else 		Motor.FlagLineContral=1;
+//						
+//					Motor.CommBuf1=AscToHex(*(buf+4))*0x10+AscToHex(*(buf+5));
+//					if(Motor.CommBuf1>(PWM_MAX_VAL-1))Motor.CommBuf1=(PWM_MAX_VAL-1);
+//					Motor.CommBuf2=AscToHex(*(buf+6))*0x10+AscToHex(*(buf+7));
+//					if(Motor.CommBuf2>(PWM_MAX_VAL-1))Motor.CommBuf2=(PWM_MAX_VAL-1);
+						
+//						switch(*(buf+2))
+//										{
+//										case REMOT_COMMAND_TEST_UART1:
+//										SendUartCommand(REMOT_COMMAND_TEST_UART2);
+//										
+//										break;	
+//											case REMOT_COMMAND_TEST_UART2:
+//												SendUartCommand(REMOT_COMMAND_TEST_UART3);
+//												
+//											break;	
+//											case REMOT_COMMAND_TEST_UART3:
+//											
+//											TimeTestUart=20;	//4秒  		//对码键测试串口 保持灯闪烁的时间
+//											break;	
+//											
+//
+//											
+//											default:		
+//
+//											break;
+//										}
+						Execute(*(buf+2));
+						
+					}
+			break;
+//			case 'R':
+//				//互相返回
+//						sum=0;
+//			for(i=0;i<4;i++)
+//					{
+//					sum+=*(buf+i);
+//					}	
+//			
+//			if((AscToHex(*(buf+4))*0x10+AscToHex(*(buf+5)))==sum)
+//						{
+//////						UartLinkTimeout=0;
+////						temp=	AscToHex(*(buf+2))*0x10+AscToHex(*(buf+3));
+//////							if((BIT6)&temp)
+//////										{
+//////										Motor.FlagSubPowerOn=1;
+//////										}
+//////							else{
+//////									Motor.FlagSubPowerOn=0;
+//////									}
+//////							
+//////							SubStatuByte=0x3F&(temp);		//分机状态标记
+//
+//						}
+//			break;
+			default:										
+			break;	
+		}
+		
+		
+}
+///////////		
+
+void CheckUart(void)
+{
+	uchar temp;
+	static uchar len;
+	static uchar buf[20+2];
+	if(FlagGetUartOk==0)
+		{
+			if(GetOneFromUart0(&temp))
+				{
+					
+					switch(temp)
+							{
+								case '%':
+								len=0;
+								break;
+								
+								case '\r':
+								FlagGetUartOk=1;
+								break;
+								
+								default:
+
+								break;
+							}
+					if(len<20)
+										{
+										buf[len]=temp;
+										len++;
+										}
+								else{
+										len=0;
+										}
+				}
+		}
+	else{//FlagGetUartOk==1
+		//EventRecvAnyTim=2;
+			ProcessUartCommand(buf,len);
+			buf[0]=0;
+			len=0;
+			FlagGetUartOk=0;
+			}
+}
 ///////
 
 void Default_ParamInit(void)
@@ -229,6 +366,8 @@ void Default_ParamInit(void)
 	
 	//SetIdTime=70;  //7S
 	SetIdTime=0;  //7S
+	
+	ClearLoopBuf(&Uart0RecvStruct,UART0_RECV_BUF_SIZE);	//清除环型缓冲区
 	
 }
 	
@@ -311,6 +450,7 @@ void ProcessJspSwitch(void)		//旋转方向切换 极性
 											Motor.FlagRuning=1;
 											Motor.CurrentType=Motor.CommandType;		//当前对方向,转向
 											Motor.CommandType=0;	//执行后清除
+											//SendUartRespone();
 										}
 								break;
 								
@@ -324,6 +464,7 @@ void ProcessJspSwitch(void)		//旋转方向切换 极性
 											Motor.FlagRuning=2;
 											Motor.CurrentType=Motor.CommandType;		//当前对方向,转向
 											Motor.CommandType=0;	//执行后清除
+											//SendUartRespone();
 										}
 								break;								
 
@@ -386,6 +527,80 @@ void ProcessCommand(uchar command)
 }
 #endif
 ///////
+
+
+void Execute(uchar cmd)
+{	
+		switch(cmd)
+					{
+					case REMOT_COMMAND_MOT3_CW:
+					
+					if(Motor.FlagPower>0)
+									{
+									Motor.FlagPower=90; //3分钟
+									Motor.FlagRuning=0;
+									Motor.CommandType=COMMAND_C1;		//按第一路正转
+									FlagAuto=1;//非点动方式
+									ProcessCommand(Motor.CommandType);		//for CC1100
+									//SendUartRespone();
+									}
+					break;
+					
+					case REMOT_COMMAND_MOT3_CCW:
+					if(Motor.FlagPower>0)
+							{
+							Motor.FlagPower=90; //3分钟	
+							Motor.FlagRuning=0;
+							Motor.CommandType=COMMAND_CC1;		//按第一路反转
+							FlagAuto=1;//非点动方式
+							ProcessCommand(Motor.CommandType);		//for CC1100
+							//SendUartRespone();
+							}
+					break;
+												
+					case REMOT_COMMAND_POWER_ON:
+							Motor.FlagPower=90; //3分钟	
+					break;
+					
+					case REMOT_COMMAND_POWER_OFF:
+																Motor.FlagPower=0;
+																Motor.FlagRuning=0;
+																Motor.CommandType=0;
+																Motor.CurrentType=0;													
+					break;
+//				case REMOT_COMMAND_SET_RATE3:	//设置电流
+
+//				Motor.FlagPower=90; //4分钟
+//																
+//					if(	FlagSetCurrent1==0)
+//								{
+//								if((Motor.FlagRuning)&&(InputBuf==0x0f)&&(FlagInputZero>0))
+//												{
+//													FlagSetCurrent1=1;
+//												}
+//								}
+//				break;
+															
+															//控制器在操作
+					case REMOT_COMMAND_MOT1_CW:
+					case REMOT_COMMAND_MOT1_CCW:	
+					case REMOT_COMMAND_MOT2_CW:
+					case REMOT_COMMAND_MOT2_CCW:
+					case REMOT_COMMAND_MOT1_CW_MOT2_CCW:
+					case REMOT_COMMAND_MOT2_CW_MOT1_CCW:
+					case REMOT_COMMAND_MOT1_MOT2_CW:
+					case REMOT_COMMAND_MOT1_MOT2_CCW:
+
+					//遥控器电源开着
+					case REMOT_COMMAND_REMOT_HAND_ON:
+															
+							Motor.FlagPower=90; //4分钟
+															
+					break;
+					}
+}
+
+
 #if CONFIG_CC1100
 
 void ProcessRemotCommand(uchar *p)		//for CC1100
@@ -444,70 +659,8 @@ uchar cmd;
 					//	SendUartCommand(cmd);
 					if(LastCommand!=cmd)
 								{
-								switch(cmd)
-														{
-															case REMOT_COMMAND_MOT3_CW:
-																if(Motor.FlagPower>0)
-																			{
-																			Motor.FlagPower=90; //3分钟
-																			Motor.FlagRuning=0;
-																			Motor.CommandType=COMMAND_C1;		//按第一路正转
-																			FlagAuto=1;//非点动方式
-																			ProcessCommand(Motor.CommandType);		//for CC1100
-																			}
-															break;
-															case REMOT_COMMAND_MOT3_CCW:
-																if(Motor.FlagPower>0)
-																			{
-																			Motor.FlagPower=90; //3分钟	
-																			Motor.FlagRuning=0;
-																			Motor.CommandType=COMMAND_CC1;		//按第一路反转
-																			FlagAuto=1;//非点动方式
-																			ProcessCommand(Motor.CommandType);		//for CC1100
-																			}
-															break;								
-															case REMOT_COMMAND_POWER_ON:
-																//Motor.FlagPower=240; //8分钟
-																Motor.FlagPower=90; //3分钟	
-															break;
-															case REMOT_COMMAND_POWER_OFF:
-																Motor.FlagPower=0;
-																Motor.FlagRuning=0;
-																Motor.CommandType=0;
-																Motor.CurrentType=0;
-																			
-															break;
-//															case REMOT_COMMAND_SET_RATE3:	//设置电流
-//																Motor.FlagPower=90; //4分钟
-//																
-//															if(	FlagSetCurrent1==0)
-//																		{
-//															if((Motor.FlagRuning)&&(InputBuf==0x0f)&&(FlagInputZero>0))
-//																							{
-//																								FlagSetCurrent1=1;
-//																							}
-//																			}
-//															break;
-															
-															//控制器在操作
-															case REMOT_COMMAND_MOT1_CW:
-															case REMOT_COMMAND_MOT1_CCW:	
-															case REMOT_COMMAND_MOT2_CW:
-															case REMOT_COMMAND_MOT2_CCW:
-															case REMOT_COMMAND_MOT1_CW_MOT2_CCW:
-															case REMOT_COMMAND_MOT2_CW_MOT1_CCW:
-															case REMOT_COMMAND_MOT1_MOT2_CW:
-															case REMOT_COMMAND_MOT1_MOT2_CCW:
+								Execute(cmd);
 
-															//遥控器电源开着
-															case REMOT_COMMAND_REMOT_HAND_ON:
-															
-															Motor.FlagPower=90; //4分钟
-															
-															break;
-															
-															
-														}
 								}
 				LastCommand=cmd;								
 				}
@@ -524,7 +677,7 @@ void ProcessRfRecv(void)
 									//RecvAny_LED1_ON;
 									ReInitCC1100Time=0;
 									
-									LED_RECV_ON;
+									//LED_RECV_ON;
 									Time_LedRecv_LED=20;
 				
 									ProcessRemotCommand(rx_buf);		//for CC1100
@@ -554,7 +707,7 @@ void ProcessRfRecv(void)
 		*/
 	if(DecodeString[2]==DecodeString[3])	
 		{
-		LED_RECV_ON;
+		//LED_RECV_ON;
 		Time_LedRecv_LED=20;
 				
 				if((SetIdTime>1)||((DecodeString[0]==gpParam->RemotName[0])&&(DecodeString[1]==gpParam->RemotName[1])))
@@ -601,7 +754,7 @@ PORTB|=0x30;  //PB4 PB5
 PORTC|=0x03;  //PC0,PC1
 temp=(0X30&PINB);		//结果
 temp>>=2;
-temp|=(PORTC&0x03);
+temp|=(PINC&0x03);
 
 
 		if(old==temp)
@@ -936,7 +1089,7 @@ static uchar tim1000ms;
 															SendToRemot(RESPONES_COMMPLETE);
 															SendToRemot(RESPONES_COMMPLETE);
 															SendToRemot(RESPONES_COMMPLETE);
-
+															//SendUartRespone();
 														}
 										break;
 										
@@ -1053,7 +1206,67 @@ PwmContral1(Motor.Pwm1);	//OC1A PWM1 控制
 }
 
 /////
-
+void SendUartRespone(void)		//%B 转发的返回信息
+{
+//		uchar len;
+//	uchar buf[20];
+//		uchar chksum,temp;
+//	uchar i;
+//	uchar status;
+//	
+//	status=		//本机
+//
+//RESPONES_COMMPLETE
+//		RESPONES_RUNING;
+//
+//
+//
+//	len		=	PutString("%B",buf,5);								//head 3
+//	buf[len]=HexToAsc(status>>4);				//
+//	len		++;
+//	buf[len]=HexToAsc(status);				//
+//	len		++;
+//	//校验码  %RxxCC\r\n
+//		chksum=0;
+//	for(i=0;i<len;i++)
+//			{
+//			chksum+=buf[i];
+//			}
+//	buf[len]=HexToAsc(chksum>>4);
+//	len		++;
+//	buf[len]=HexToAsc(chksum);
+//	len		++;
+//	
+//	//////////////////
+//	#if DEBUG2
+//	temp=	gpParam->flag_MainSub;
+//	if(Flag_Link==1)
+//	  		{
+//	  			//连线问题
+//	  			temp|=BIT7;
+//	  		}
+//	  		
+//	if(Flag_unLink==1)
+//	  		{
+//	  			//连线问题
+//	  			temp|=BIT6;
+//	  		}	  		
+//	  if(Motor.FlagSubPowerOn!=0)
+//	  	{
+//	  		temp|=BIT5;
+//	  	}		
+//	
+//		buf[len]=HexToAsc(temp>>4);
+//	len		++;
+//	buf[len]=HexToAsc(temp);
+//	len		++;
+//	#endif
+//	///////////////////
+//	len  += PutString("\r\n",&buf[len],5);
+//	SendText_UART0(buf);
+	
+}
+/////
 void ParamSend(void)
 {
 	uchar len;
@@ -1246,7 +1459,7 @@ void Work(void)
 				ProcessRfRecv();
 #endif				
 
-				
+				CheckUart();
 				
 				ProcessTimeSoftStart();	//10MS软启动
 //				ProcessTestStep();
@@ -1291,18 +1504,18 @@ void Work(void)
 											LED_RUN_OFF;
 										}
 					}
-#if Config_Al_Box					
-			//	if(KeybyteBuf&BIT3)	//K4_LVL
-					if(K4_LVL)
-								{
-									//SetLed2;	//跳线不连接表示铝箱体
-									LED_Al_Box;
-								}
-				else{
-								//ClrLed2;	//跳线连接表示铁箱体
-								LED_Fe_Box;
-						}
-#endif				
+//#if Config_Al_Box					
+//
+//					if(K4_LVL)
+//								{
+//									//SetLed2;	//跳线不连接表示铝箱体
+//									LED_Al_Box;
+//								}
+//				else{
+//								//ClrLed2;	//跳线连接表示铁箱体
+//								LED_Fe_Box;
+//						}
+//#endif				
 				
 				}
 }

@@ -133,14 +133,14 @@ extern char bTimeBase;
 #define Setb_bTimeBase	bTimeBase=1;
 #define Clr_bTimeBase	bTimeBase=0;
 
-#define LED_RUN_ON			SetLed1
-#define LED_RUN_OFF			ClrLed1
-#define LED_RECV_ON			SetLed2
-#define LED_RECV_OFF		ClrLed2
+#define LED_RUN_ON			SetLed2
+#define LED_RUN_OFF			ClrLed2
+#define LED_RECV_ON			;//SetLed1
+#define LED_RECV_OFF		;//ClrLed1
 
 
-#define LED_Al_Box		;//SetLed2
-#define LED_Fe_Box	;//ClrLed2
+#define LED_Al_Box		SetLed1
+#define LED_Fe_Box		ClrLed1
 
 extern unsigned char Time_LedRecv_LED;
 
@@ -200,7 +200,7 @@ void SendToRemot(uchar command); //·´À¡µ½Ò£¿ØÆ÷
 
 extern uint16 giCodeChecksum;
 
-
+void Execute(uchar cmd);
 void ParamSend(void);
 void AutoSend(void);
 void SendText_UART0(INT8U *StrData);
