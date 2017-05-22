@@ -179,13 +179,13 @@ void Default_ParamInit(void)
 	gpParam->RemotName[0]=0x35;
 	gpParam->RemotName[1]=0x35;
 	gpParam->RemotName[2]=0x36;	
-	gpParam->xxx[0]=0x0;
-	gpParam->xxx[1]=0x0;
+	//gpParam->xxx[0]=0x0;
+	//gpParam->xxx[1]=0x0;
 #elif CONFIG_433SG
 	gpParam->RemotName[0]=0x0;
 	gpParam->RemotName[1]=0x0;
-	gpParam->xxx[0]=0x0;
-	gpParam->xxx[1]=0x0;
+	//gpParam->xxx[0]=0x0;
+	//gpParam->xxx[1]=0x0;
 #endif	
 	gpParam->flag=FlagParamInitnized;		//参数已经初始化标记
 	
@@ -225,7 +225,7 @@ void Default_ParamInit(void)
 		LastCommand=0;	//上次命令
 
 	
-	SetIdTime=80;  //8S
+	SetIdTime=40;  //4S
 	
 	
 }
@@ -395,7 +395,6 @@ uchar i;
 uchar *nm;
 uchar cmd;
 
-uchar SetIdTime;
 
 /*
 			buf[4]=	command;	
@@ -412,26 +411,24 @@ uchar SetIdTime;
 //		if(*(p+7)==0x70)	
 //			{//老式遥控器兼容
 //		}
-
+//									Time_LedRecv_LED=20;
+//									LED_RECV_ON;
 	if(SetIdTime>0)
 		{
-		
-		
+//			LED_RECV_ON;
+//			Time_LedRecv_LED=20;		
+
 			//setid
 			if(cmd==REMOT_COMMAND_POWER_ON)
 					{
 					gpParam->RemotName[0]=*(nm);
 					gpParam->RemotName[1]=*(nm+1);
 					gpParam->RemotName[2]=*(nm+2);
-//					if(WirelessDebugTime>0)
-//						ResponseType=REMOT_COMMAND_DEBUG;
-//					else 	ResponseType=REMOT_COMMAND_SET_ID;	//0X59
+
 
 				#if CONFIG_SAVE5
-				for(i=0;i<Max_Param_Len;i++)
-					{
-					EEPROM_Write(EEPROM_BASE_ADR+i,gbParamBuf[i]);
-					}
+
+						Write_Param();				
 				#endif
 				
 				SetIdTime=0;
@@ -502,8 +499,9 @@ if(cc1100Scanf(rx_buf))
 									{
 									//RecvAny_LED1_ON;
 									ReInitCC1100Time=0;
-									//LED_RECV_ON;
-									//Time_LedRecv_LED=20;
+									
+//									LED_RECV_ON;
+//									Time_LedRecv_LED=20;
 				
 									ProcessRemotCommand(rx_buf);		//for CC1100
 //									ResponseTime=0;
@@ -553,13 +551,10 @@ void ProcessRfRecv(void)
 												//if(DecodeString[2]==0x50)
 													gpParam->RemotName[0]=DecodeString[0];
 													gpParam->RemotName[1]=DecodeString[1];
-													#if CONFIG_SAVE5
-													for(i=0;i<Max_Param_Len;i++)
-														{
-														EEPROM_Write(EEPROM_BASE_ADR+i,gbParamBuf[i]);
-														}
+
+													#if CONFIG_SAVE5	
+													Write_Param();
 													#endif
-													
 												SetIdTime=0;
 											}
 					}
@@ -1020,7 +1015,7 @@ void ParamSend(void)
 	len		+=	MakeValAsc8("I2=",gpParam->bCurrentBackward,",",&buf[len]);	//
 	len		+=	MakeValAsc8("k=",gpParam->bCurrentRate,",",&buf[len]);	//
 	
-	#if CONFIG_433SG
+	#if CONFIG_433SG || CONFIG_CC1100
 	len		+=	PutString("ID=",&buf[len],5);
 	buf[len]=HexToAsc(gpParam->RemotName[0]>>4);
 	len++;
@@ -1030,6 +1025,12 @@ void ParamSend(void)
 	len++;
 	buf[len]=HexToAsc(gpParam->RemotName[1]);
 	len++;
+			#if CONFIG_CC1100
+			buf[len]=HexToAsc(gpParam->RemotName[2]>>4);
+			len++;
+			buf[len]=HexToAsc(gpParam->RemotName[2]);
+			len++;
+			#endif
 	buf[len]=',';
 	len++;
 	#endif

@@ -1,7 +1,7 @@
 #ifndef __LOOP_BUF_H
 #define __LOOP_BUF_H
 #define UART0_RECV_BUF_SIZE	36
-#define UART0_SEND_BUF_SIZE	36
+#define UART0_SEND_BUF_SIZE	38
 //#define	SizeDataType	unsigned short int
 #define	SizeDataType	unsigned char
 

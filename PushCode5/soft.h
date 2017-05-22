@@ -136,11 +136,14 @@ extern struct	struct_save *gpParam;
 //#define Max_Param_Len		8
 #define Max_Param_Len		10
 //参数已经初始化标记
-#define FlagParamInitnized	0xA8
+#define FlagParamInitnized	0xA9
 extern uchar gbParamBuf[Max_Param_Len+2];
 
 //参数的EEPROM区首地址
-#define EEPROM_BASE_ADR	0X20
+#define EEPROM_BASE_ADR	0X10
+
+
+void SendToRemot(uchar command); //反馈到遥控器
 
 
 
