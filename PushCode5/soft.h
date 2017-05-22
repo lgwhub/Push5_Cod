@@ -56,10 +56,10 @@ typedef double               FP64;
 
 
 //电动顶紧
-//#define REMOT_COMMAND_MOT3_CW		0X51
-//#define REMOT_COMMAND_MOT3_CCW		0X55
-#define REMOT_COMMAND_MOT3_CW		REMOT_COMMAND_MOT1_MOT2_CW
-#define REMOT_COMMAND_MOT3_CCW		REMOT_COMMAND_MOT1_MOT2_CCW
+#define REMOT_COMMAND_MOT3_CW		0X51
+#define REMOT_COMMAND_MOT3_CCW		0X55
+//#define REMOT_COMMAND_MOT3_CW		REMOT_COMMAND_MOT1_MOT2_CW
+//#define REMOT_COMMAND_MOT3_CCW		REMOT_COMMAND_MOT1_MOT2_CCW
 
 #define REMOT_COMMAND_MOT4_CW		0X52
 #define REMOT_COMMAND_MOT4_CCW		0X56
@@ -71,10 +71,12 @@ typedef double               FP64;
 
 #define RESPONES_RUNING			0X68
 #define RESPONES_COMMPLETE		0X6A
+//电动顶紧对码
+#define REMOT_COMMAND_SHIFT_SET_ID		0X6C
 //整定电动顶紧电流
-#define REMOT_COMMAND_SET_RATE3		0X6C
-
-
+#define REMOT_COMMAND_SET_RATE3		0X6D
+//电动顶紧总控制开
+#define REMOT_COMMAND_PUSH_POWER_ON		0X6F
 /**************************************************************************************************/
 extern char bTimeBase;
 #define Setb_bTimeBase	bTimeBase=1;

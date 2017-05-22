@@ -107,11 +107,11 @@ void SendToRemot(uchar command) //反馈到遥控器
 #if CONFIG_CC1100
 uchar buf[36+14];
 uchar i,len;	
-static uchar id;
 
-id++;
-
-buf[0]=0x31+(0x07&id);	//1~8
+//static uchar id;
+//id++;
+//buf[0]=0x31+(0x07&id);	//1~8
+buf[0]=0x31;	//1~8
 buf[1]=gpParam->RemotName[0];
 buf[2]=gpParam->RemotName[1];
 buf[3]=gpParam->RemotName[2];
@@ -225,7 +225,7 @@ void Default_ParamInit(void)
 		LastCommand=0;	//上次命令
 
 	
-	SetIdTime=40;  //4S
+	SetIdTime=70;  //7S
 	
 	
 }
@@ -298,7 +298,6 @@ void ProcessJspSwitch(void)		//旋转方向切换 极性
 			if(DropOffTime>120)//死区时间
 						{//反转已经停止
 						switch(Motor.CommandType)	//
-						//switch(LastCommand)
 								{
 								case COMMAND_C1:		//按住第一路正转
 								case COMMAND_A1:			//按一下第一路正转
@@ -411,15 +410,13 @@ uchar cmd;
 //		if(*(p+7)==0x70)	
 //			{//老式遥控器兼容
 //		}
-//									Time_LedRecv_LED=20;
-//									LED_RECV_ON;
+
 	if(SetIdTime>0)
 		{
-//			LED_RECV_ON;
-//			Time_LedRecv_LED=20;		
+	
 
 			//setid
-			if(cmd==REMOT_COMMAND_POWER_ON)
+			if(cmd==REMOT_COMMAND_SHIFT_SET_ID)//REMOT_COMMAND_POWER_ON)
 					{
 					gpParam->RemotName[0]=*(nm);
 					gpParam->RemotName[1]=*(nm+1);
@@ -440,8 +437,7 @@ uchar cmd;
 			if((CompareCharChar(nm,"555",3)!=0)||(CompareCharChar(nm,&gpParam->RemotName[0],3)!=0))	//默认地址
 				{
 			//遥控器序号ok
-			LED_RECV_ON;
-			Time_LedRecv_LED=20;
+
 			
 					//	SendUartCommand(cmd);
 					if(LastCommand!=cmd)
@@ -449,8 +445,9 @@ uchar cmd;
 								switch(cmd)
 														{
 															case REMOT_COMMAND_MOT3_CW:
-																if(Motor.FlagPower)
+																if(Motor.FlagPower>0)
 																			{
+																			Motor.FlagPower=120; //4分钟
 																			Motor.FlagRuning=0;
 																			Motor.CommandType=COMMAND_C1;		//按第一路正转
 																			FlagAuto=1;//非点动方式
@@ -458,8 +455,9 @@ uchar cmd;
 																			}
 															break;
 															case REMOT_COMMAND_MOT3_CCW:
-																if(Motor.FlagPower)
+																if(Motor.FlagPower>0)
 																			{
+																			Motor.FlagPower=120; //4分钟	
 																			Motor.FlagRuning=0;
 																			Motor.CommandType=COMMAND_CC1;		//按第一路反转
 																			FlagAuto=1;//非点动方式
@@ -467,21 +465,24 @@ uchar cmd;
 																			}
 															break;								
 															case REMOT_COMMAND_POWER_ON:
-																Motor.FlagPower=1;
-																	
+																//Motor.FlagPower=240; //8分钟
+																Motor.FlagPower=120; //4分钟	
 															break;
 															case REMOT_COMMAND_POWER_OFF:
 																Motor.FlagPower=0;
 																Motor.FlagRuning=0;
 																Motor.CommandType=0;
 																Motor.CurrentType=0;
-																//SendToRemot(RESPONES_COMMPLETE);			
+																			
 															break;
-															case 99:	//设置电流
+															case REMOT_COMMAND_SET_RATE3:	//设置电流
+															if(	FlagSetCurrent1==0)
+																		{
 															if((Motor.FlagRuning)&&(InputBuf==0x0f)&&(FlagInputZero))
 																							{
 																								FlagSetCurrent1=1;
 																							}
+																			}
 															break;
 														}
 								}
@@ -495,13 +496,13 @@ uchar cmd;
 
 void ProcessRfRecv(void)
 {
-if(cc1100Scanf(rx_buf))
+	if(cc1100Scanf(rx_buf))
 									{
 									//RecvAny_LED1_ON;
 									ReInitCC1100Time=0;
 									
-//									LED_RECV_ON;
-//									Time_LedRecv_LED=20;
+									LED_RECV_ON;
+									Time_LedRecv_LED=20;
 				
 									ProcessRemotCommand(rx_buf);		//for CC1100
 //									ResponseTime=0;
@@ -632,7 +633,6 @@ void ProcessKey(uchar in,uchar old)
 								Motor.FlagRuning=0;
 							Motor.CommandType=COMMAND_C1;		//按第一路正转
 							FlagAuto=1;//非点动方式
-							//LastCommand=
 							
 							//333	Motor.TimePer94=0;
 							Motor.iTimePer85=0;
@@ -653,7 +653,7 @@ void ProcessKey(uchar in,uchar old)
 								Motor.FlagRuning=0;
 							Motor.CommandType=COMMAND_CC1;		//反转
 							FlagAuto=1;//非点动方式
-							//LastCommand=
+
 							//333	Motor.TimePer94=0;
 							Motor.iTimePer85=0;	
 							Motor.timer_sec100=0;						
@@ -679,14 +679,12 @@ void ProcessKey(uchar in,uchar old)
 				{
 					Motor.CommandType=COMMAND_C1;		//按第一路正转
 					FlagAuto=0;//点动方式	
-					//LastCommand=
 					CommandLostTimeOut=0;
 				}
 			else if((in&BIT1)==0)
 				{//k2
 					Motor.CommandType=COMMAND_CC1;		//反转
 					FlagAuto=0;//点动方式	
-					//LastCommand=
 					CommandLostTimeOut=0;
 				}
 				
@@ -783,7 +781,7 @@ static uchar tim1000ms;
 //		#if CONFIG_433SG ||CONFIG_CC1100
 //			SamCommandTime=0;	//age
 //		#endif	
-			LastCommand=0;		
+		//	LastCommand=0;		
 		
 
 		}
@@ -795,16 +793,14 @@ static uchar tim1000ms;
 		}
 	else{//到了2秒
 		tim1000ms=0;
-//			if(Motor.FlagRuning!=0)
-//					{
-//					SendToRemot(RESPONES_RUNING);	
-//					}		
+		LastCommand=0;
+
 					
 				
 		/////////////////////////////
 			if(ReInitCC1100Time>20)//if(ReInitCC1100Time>30)
 										{
-										Motor.FlagPower=0;
+										
 										ReInitCC1100Time=0;
 							
 												#if CONFIG_CC1100
@@ -814,6 +810,13 @@ static uchar tim1000ms;
 				else{
 						ReInitCC1100Time++;
 						}
+			
+			if(Motor.FlagPower>0)	//
+						{
+							SendToRemot(REMOT_COMMAND_PUSH_POWER_ON);
+							Motor.FlagPower--;//每2秒减1
+						}			
+						
 			}
 ///////////////////////////////////////////////////////////	
 //超时自动关闭		
@@ -832,9 +835,7 @@ static uchar tim1000ms;
 
 			}
 			
-			
-			
-			
+		
 			if(Motor.RunTime>MAX_RUN_TIME_sec)	//80s自动关掉	
 			//if((Motor.RunTime+Motor.unPushTime)>MAX_RUN_TIME_sec)	//80s自动关掉		
 					{
@@ -894,6 +895,7 @@ static uchar tim1000ms;
 															Motor.CurrentType=0;
 															//Motor.unPushTime=0;
 															SendToRemot(RESPONES_COMMPLETE);
+															SendToRemot(RESPONES_COMMPLETE);
 														}
 										break;
 										
@@ -915,7 +917,7 @@ static uchar tim1000ms;
 													Motor.FlagRuning=0;
 													Motor.CommandType=0;		
 													Motor.CurrentType=0;
-													SendToRemot(RESPONES_COMMPLETE);
+													//SendToRemot(RESPONES_COMMPLETE);
 													
 													#if CONFIG_UNPUSH
 													//防止橡皮圈压得太紧，反转退到底后自动正转一点，放松
@@ -1198,14 +1200,17 @@ void Work(void)
 							tim4=150;		//放松 1.5s闪烁
 				else  tim4=30;		//顶进 300ms闪烁
 				
+				
 				tim++;
 				if(tim>tim4)
 					{tim=0;
 						#if CONFIG_UART
 						AutoSend();
 						#endif
-						LED_RUN_ON;	//SetLed1
-						
+					if((Motor.FlagRuning!=0)||(SetIdTime>0)||(Motor.FlagPower>0))
+									{
+									LED_RUN_ON;	//SetLed1
+									}
 					if(Motor.FlagRuning!=0)
 							{
 							SendToRemot(RESPONES_RUNING);	
@@ -1215,7 +1220,7 @@ void Work(void)
 					}
 				else if(tim>15)
 					{
-						if((Motor.FlagRuning!=0)||(SetIdTime>0))
+						if((Motor.FlagRuning!=0)||(SetIdTime>0)||(Motor.FlagPower==0))
 										{
 											LED_RUN_OFF;
 										}
