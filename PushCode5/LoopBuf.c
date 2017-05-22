@@ -1,7 +1,7 @@
 #include "nomal.h"
 #include "config.h"
 
-#if CONFIG_UART
+
 
 #include "LoopBuf.h"
 
@@ -71,4 +71,3 @@ else return 0;	//缓冲区没有数据
 }
 
 
-#endif

@@ -198,16 +198,16 @@ extern uchar gbParamBuf[Max_Param_Len+2];
 
 void SendToRemot(uchar command); //反馈到遥控器
 
+extern uint16 giCodeChecksum;
 
 
-#if CONFIG_UART
 void ParamSend(void);
 void AutoSend(void);
 void SendText_UART0(INT8U *StrData);
 	#if CONFIG_433SG
 			void RemotCodeSend(uchar *command1,uchar comlen1);
 	#endif
-#endif
+
 void CheckKey(void);		//周期10ms
 void CheckInput(void);
 void Work(void);

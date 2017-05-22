@@ -3,8 +3,7 @@
 
 ////////选择看门狗//////
 #define EnWdog 				1
-//配置监视通信口
-#define CONFIG_UART			1
+
 //保存参数，ID号
 #define CONFIG_SAVE5		1
 

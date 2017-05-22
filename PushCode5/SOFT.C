@@ -18,12 +18,13 @@
 	#else
 		#include <iom88v.h>
 	#endif
-#if CONFIG_UART
+
 	#include "LoopBuf.h"
-#endif
 
 /**************************************************************************************************/
 uchar bTimeBase;
+
+uint16 giCodeChecksum;
 
 ReInitCC1100Time=0;
 unsigned char Time_LedRecv_LED;
@@ -60,6 +61,7 @@ uchar FlagTestStep;
 struct	struct_save *gpParam;
 uchar gbParamBuf[Max_Param_Len+2];
 
+uchar TimeDebug=0;
 uchar FlagInputZero=0;
 uchar InputBuf=0x0f;
 
@@ -146,7 +148,7 @@ buf[32]=0x00;
 
 
 
-#if CONFIG_UART
+
 void SendText_UART0(INT8U *StrData)
 {
 	uchar i;
@@ -157,7 +159,7 @@ void SendText_UART0(INT8U *StrData)
 	  }	
 	
 }
-#endif
+
 ///////
 
 void Default_ParamInit(void)
@@ -475,17 +477,17 @@ uchar cmd;
 																Motor.CurrentType=0;
 																			
 															break;
-															case REMOT_COMMAND_SET_RATE3:	//设置电流
-																Motor.FlagPower=90; //4分钟
-																
-															if(	FlagSetCurrent1==0)
-																		{
-															if((Motor.FlagRuning)&&(InputBuf==0x0f)&&(FlagInputZero))
-																							{
-																								FlagSetCurrent1=1;
-																							}
-																			}
-															break;
+//															case REMOT_COMMAND_SET_RATE3:	//设置电流
+//																Motor.FlagPower=90; //4分钟
+//																
+//															if(	FlagSetCurrent1==0)
+//																		{
+//															if((Motor.FlagRuning)&&(InputBuf==0x0f)&&(FlagInputZero>0))
+//																							{
+//																								FlagSetCurrent1=1;
+//																							}
+//																			}
+//															break;
 															
 															//控制器在操作
 															case REMOT_COMMAND_MOT1_CW:
@@ -582,9 +584,9 @@ void ProcessRfRecv(void)
 					}
 					
 		}
-	#if CONFIG_UART
+
 	RemotCodeSend(DecodeString,LENGTH_REMOT_PARK);	
-	#endif
+
 	DecodeCompleteFlag=0;	//允许再次接收指令
 }
 #endif
@@ -605,7 +607,7 @@ temp|=(PORTC&0x03);
 		if(old==temp)
 					{
 						InputBuf=temp;//(~temp);	//取反
-						if(InputBuf==0)FlagInputZero=1;
+						if(InputBuf==0)FlagInputZero=120;  //4分钟
 					}
 		else{ 	
 				old=temp;	
@@ -719,11 +721,12 @@ void ProcessKey(uchar in,uchar old)
 						{
 							if((in&BIT2)==0)
 										{
+										TimeDebug=30;	
+											
 											if(FlagSetCurrent1==0)	
 												{
 												
-													//if((Motor.FlagRuning)&&(InputBuf==0x0f))
-														if((Motor.FlagRuning)&&(InputBuf==0x0f)&&(FlagInputZero))
+														if((Motor.FlagRuning)&&(InputBuf==0x0f)&&(FlagInputZero>0))
 																{
 																	FlagSetCurrent1=1;
 																}
@@ -846,7 +849,11 @@ static uchar tim1000ms;
 						{
 							SendToRemot(REMOT_COMMAND_PUSH_POWER_ON);
 							Motor.FlagPower--;//每2秒减1
-						}			
+						}	
+								
+			if(FlagInputZero>0)	FlagInputZero--;
+				
+			if(TimeDebug>0)	TimeDebug--;
 						
 			}
 ///////////////////////////////////////////////////////////	
@@ -1046,7 +1053,7 @@ PwmContral1(Motor.Pwm1);	//OC1A PWM1 控制
 }
 
 /////
-#if CONFIG_UART
+
 void ParamSend(void)
 {
 	uchar len;
@@ -1082,6 +1089,20 @@ void ParamSend(void)
 	len		+=	PutString("\r\n",&buf[len],5);
 
 SendText_UART0(buf);	
+////////////////////////////////////////
+len		=	PutString("%C,",buf,5);	
+buf[len]=HexToAsc((giCodeChecksum>>12)&0x0f);
+len++;
+buf[len]=HexToAsc((giCodeChecksum>>8)&0x0f);
+len++;	
+buf[len]=HexToAsc((giCodeChecksum>>4)&0x0f);
+len++;
+buf[len]=HexToAsc(giCodeChecksum&0x0f);
+len++;
+len		+=	PutString("\r\n",&buf[len],5);
+SendText_UART0(buf);
+
+
 }
 /////
 void AutoSend(void)
@@ -1204,7 +1225,7 @@ SendText_UART0(buf);
 		
 }
 #endif
-#endif
+
 /////
 void Work(void)
 {
@@ -1245,9 +1266,12 @@ void Work(void)
 				tim++;
 				if(tim>tim4)
 					{tim=0;
-						#if CONFIG_UART
-						AutoSend();
-						#endif
+
+						if((TimeDebug>0)||(FlagSetCurrent1!=0))
+								{
+								AutoSend();
+								}
+
 					if((Motor.FlagRuning!=0)||(SetIdTime>0)||(Motor.FlagPower>0))
 									{
 									LED_RUN_ON;	//SetLed1

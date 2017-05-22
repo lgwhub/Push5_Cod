@@ -18,9 +18,9 @@
 	#endif
 
 
-#if CONFIG_UART
+
 	#include "LoopBuf.h"
-#endif
+
 #if CONFIG_433SG
   #include "Decode.h"
 		void Init_ext_Int1(void);
@@ -30,7 +30,7 @@ void Init_Hd(void);
 
 void InitOutLevelDefault(void);
 //////////////////////////////
-//void TestUart2(void);
+
 
 
 
@@ -74,7 +74,7 @@ for(i=0;i<x;i++)
 ///
 void LedStart(void)   /* 启动时指示灯闪烁  */
 {
-	/*
+
 	uchar i;
 	ClrLed1;
 	ClrLed2;
@@ -90,7 +90,7 @@ void LedStart(void)   /* 启动时指示灯闪烁  */
 		asm("wdr");
 		#endif
 	}
-	*/
+
 	/*
 	for(i=0;i<3;i++)
 	{
@@ -104,9 +104,79 @@ void LedStart(void)   /* 启动时指示灯闪烁  */
 	}
 	*/
 ClrLed1;
-//ClrLed2;
+ClrLed2;
 }
 
+////////////////////////
+void SendTestCC1100M(void) //上电时按住键则发送测试包
+{
+
+uchar buf[36+14];
+uchar len;
+uint16	iTimeout;;	
+
+for(len=0;len<30;len++)
+		{
+		buf[len]='*';
+		}
+
+
+buf[0]=0x31;	//1~8
+buf[1]=gpParam->RemotName[0];
+buf[2]=gpParam->RemotName[1];
+buf[3]=gpParam->RemotName[2];
+buf[4]=REMOT_COMMAND_POWER_OFF;
+buf[5]=giCodeChecksum>>8;
+buf[6]=giCodeChecksum&0xff;
+buf[7]=0x70;
+
+
+
+						len=8;
+						len		+=	MakeValAsc8("K",gpParam->bCurrentRate,",",&buf[len]);	//
+						len+=MakeValAsc8("I",gpParam->bCurrentForward,",",&buf[len]);
+						len+=MakeValAsc8("",gpParam->bCurrentBackward,",",&buf[len]);
+						len+=MakeValAsc8("F",cc1100regcfg[2],",",&buf[len]);
+						
+
+
+
+buf[30]=0x0d;
+buf[31]=0x0a;
+buf[32]=0x00;
+
+if(K5_LVL==0)
+		{
+			cc1100Initializtion();
+			DelayMs(10);
+		}
+		
+
+		iTimeout=0;
+while((K5_LVL==0)&&(iTimeout<2000))
+				{
+					iTimeout++;
+					cc1100Printf(buf);
+					asm("wdr");
+				}
+}
+////////////////////////
+uint16 GetCodeCheckSum(void)
+{
+	uint16 sum;
+	uint16 i;
+	const uchar *p;
+	p=0;
+	sum=0;
+	for(i=0;i<8192;i++)  //mega88
+			{
+				sum+=*(p+i);
+				
+			}		
+
+return sum;
+}
+//////////////////////
 
 void main(void)
 {
@@ -137,27 +207,38 @@ Init_Hd();
 InitAdc();
 LedStart();
 
-#if CONFIG_UART
-/*
-***Takeup6**
-&ED,I1=048,I2=049,I3=050,ID=0000,
-&EC,I=000,In=00,Pu=0208
-&ER,3132333435
-*/
-SendText_UART0("***Push3**\r\n");
-ParamSend();
-AutoSend();
-		#if CONFIG_433SG
-				RemotCodeSend("12345",5);
-		#endif
-#endif
+
+
+
+if(K5_LVL==0)
+		{
+			DelayMs(5);
+			giCodeChecksum=GetCodeCheckSum();
+			
+			if(K5_LVL==0)
+						{
+						/*
+						&ED,I1=048,I2=049,I3=050,ID=0000,
+						&EC,I=000,In=00,Pu=0208
+						&ER,3132333435
+						*/
+						SendText_UART0("***Push5**\r\n");
+						ParamSend();
+						AutoSend();
+								#if CONFIG_433SG
+										RemotCodeSend("12345",5);
+								#endif							
+						SendTestCC1100M();//上电时按住键则发送测试包	
+						}
+
+		}
+
+
 ///////////////////
 //LedStart(); 
 
 #if CONFIG_CC1100
 cc1100Initializtion();
-
-//SendToRemot('a');
 
 #elif CONFIG_433SG
 InitDecode();
@@ -329,7 +410,7 @@ if(FlagOk)
 }
 #endif
 ////
-#if CONFIG_UART
+
 void Init_Uart(unsigned int baud,unsigned char parity)
 {
 
@@ -373,7 +454,7 @@ UBRR0H	=	(baud>>8)&0XFF;
 	
 
 }
-#endif
+
 
 /////
 
@@ -574,7 +655,7 @@ void Init_Hd(void)
 	
 	
 	Init_GPIO();
-	#if CONFIG_UART
+
 	//内部RC振荡器频率校准
 	//OSCCAL = EEPROM_Read(EEPROM_OSCCAL_ADR);
 
@@ -583,13 +664,13 @@ void Init_Hd(void)
 			{
 			OSCCAL = OSSCAL_AT_MEGA48_FLASH;
 			}
-	#endif
+
 		
 	/////
 	ClearLoopBuf(&Uart0SendStruct,UART0_SEND_BUF_SIZE);	//清除环型缓冲区
-	//Init_Uart(BAUD_DEFINE(9600),0);
+Init_Uart(BAUD_DEFINE(9600),0);
 //	Init_Uart(BAUD_DEFINE(9400),0);
-Init_Uart(BAUD_DEFINE(9200),0);
+	//Init_Uart(BAUD_DEFINE(9200),0);
 	#endif
 	
 	//InitAdc();
@@ -607,7 +688,7 @@ SREG	|=	0X80;					//使能总中断
 
 
 /////
-#if CONFIG_UART
+
 uchar Uart0CharSend(uchar x)
 {
 	
@@ -647,7 +728,7 @@ uchar Uart0CharSend(uchar x)
 	             
 	return (!fail);;
 }
-#endif 
+
 /////////////////////////
 
 //////////////////
@@ -696,7 +777,7 @@ __interrupt void uart0_rxd_isr(void)
 void uart0_rxd_isr(void)	
 #endif
 {
-#if CONFIG_UART
+
 /*
 	unsigned char temp;	
 	
@@ -705,7 +786,7 @@ void uart0_rxd_isr(void)
 	
 	AddLoopBuf(&Uart0RecvStruct,Uart0RecvBuf,UART0_RECV_BUF_SIZE,temp);	//加入到环型缓冲区
 */
-#endif	
+
 
 
 }
@@ -721,7 +802,7 @@ void uart0_udre_isr(void)
 
 {//20发送数据寄存器空
 	
-#if CONFIG_UART
+
 	unsigned char temp;
 	
 
@@ -735,7 +816,7 @@ void uart0_udre_isr(void)
 				UCSR0B	&=	~(1<<UDRIE0);				//防止发送缓冲器空中断
 				}
 	
-#endif	
+
 	
 
 }
@@ -748,9 +829,9 @@ __interrupt void uart0_txc_isr(void)
 void uart0_txc_isr(void)	
 #endif
 {
-#if CONFIG_UART
+
 	//Clr_En485; 	//485禁止发送
-#endif
+
 
 }
 
@@ -1175,21 +1256,6 @@ void LedContral(void)  /* 亮灭转换  */
 }
 
 
-#if CONFIG_UART
-void TestUart2(void)
-{
-//uchar MakeValAsc16(uchar *StrHead,uint16 Val,uchar *StrEnd,uchar *out)	//16位变量转换为十进制的ASC码，有前后缀
-/*
-uchar buf[50];
-uchar l;
-l=MakeValAsc16("At=",ActiveTime,"S",buf,0);//活动时间,超过最大值掉电
-l+=MakeValAsc16("Nt=",NoChangTime,"S,",&buf[l],0);
-l+=MakeValAsc16("V=",iVolt,"x10mV",&buf[l],0);
 
-l		+=	PutString("\r\n",&buf[l],5);	
-SendText_UART0(buf);
-*/
-}
-#endif
 /////////
 
