@@ -51,32 +51,83 @@ typedef double               FP64;
 #define COMMAND_A3	0X71			//按一下第三路正转
 #define COMMAND_AA3	0X81			//按一下第三路反转		
 
-#define REMOT_COMMAND_MOT1_MOT2_CW	0X34
-#define REMOT_COMMAND_MOT1_MOT2_CCW	0X44
 
 
 //电动顶紧
 #define REMOT_COMMAND_MOT3_CW		0X51
 #define REMOT_COMMAND_MOT3_CCW		0X55
-//#define REMOT_COMMAND_MOT3_CW		REMOT_COMMAND_MOT1_MOT2_CW
-//#define REMOT_COMMAND_MOT3_CCW		REMOT_COMMAND_MOT1_MOT2_CCW
-
 #define REMOT_COMMAND_MOT4_CW		0X52
 #define REMOT_COMMAND_MOT4_CCW		0X56
 #define REMOT_COMMAND_MOT3_MOT4_CW		0X53
 #define REMOT_COMMAND_MOT3_MOT4_CCW		0X57
-////////////////
-#define REMOT_COMMAND_POWER_ON		0X39
-#define REMOT_COMMAND_POWER_OFF		0X49
-
 #define RESPONES_RUNING			0X68
-#define RESPONES_COMMPLETE		0X6A
+#define RESPONES_COMMPLETE		0X69
 //电动顶紧对码
 #define REMOT_COMMAND_SHIFT_SET_ID		0X6C
 //整定电动顶紧电流
 #define REMOT_COMMAND_SET_RATE3		0X6D
 //电动顶紧总控制开
 #define REMOT_COMMAND_PUSH_POWER_ON		0X6F
+////////////////
+#define REMOT_COMMAND_POWER_ON		0X39
+#define REMOT_COMMAND_POWER_OFF		0X49
+#define REMOT_COMMAND_MOT1_CW		0X31
+#define REMOT_COMMAND_MOT1_CCW		0X41
+#define REMOT_COMMAND_MOT2_CW		0X32
+#define REMOT_COMMAND_MOT2_CCW		0X42
+
+#define REMOT_COMMAND_MOT1_CW_MOT2_CCW	0X33
+#define REMOT_COMMAND_MOT2_CW_MOT1_CCW	0X43
+
+#define REMOT_COMMAND_MOT1_MOT2_CW	0X34
+#define REMOT_COMMAND_MOT1_MOT2_CCW	0X44
+
+//遥控器电源开着
+#define REMOT_COMMAND_REMOT_HAND_ON	0X38
+//电机控制键刚放开
+#define REMOT_COMMAND_MOT1_MOT2_OFF	0x48
+#define REMOT_COMMAND_SET_ID		0X59
+
+//调试方式
+#define REMOT_COMMAND_DEBUG		0X25
+//整定电流
+#define REMOT_COMMAND_SET_RATE1		0X21
+#define REMOT_COMMAND_SET_RATE2		0X22
+
+#define REMOT_COMMAND_PARA_INIT	0x29
+
+#define REMOT_COMMAND_TEST1		0X5A
+
+#define REMOT_COMMAND_SET_SUB   0X76
+
+
+#define REMOT_COMMAND_TEST_UART1   0X70
+#define REMOT_COMMAND_TEST_UART2   0X71
+#define REMOT_COMMAND_TEST_UART3   0X72
+
+
+#define REMOT_COMMAND_TEST_STATUS	 0X73
+/////////////////////////////////////////////////////////////////////////
+////////////////////////////////返回的报警信号/////////////////////////////////////////
+
+#define STATUS_POWER_ON  0x74
+#define STATUS_POWER_OFF  0x75
+//温度报警标记
+#define ALM_TEMPERATURE		0X62
+
+//超电压报警标记
+#define ALM_VOLTHIGH			0X64
+
+//欠电压报警标记
+#define ALM_VOLT_LOW			0X63
+
+//过电流报警标记
+#define ALM_CURRENT1			0X61
+
+//过电流保护标记
+#define ALM_CURRENT2			0X60
+
+
 /**************************************************************************************************/
 extern char bTimeBase;
 #define Setb_bTimeBase	bTimeBase=1;

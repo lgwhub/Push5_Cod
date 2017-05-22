@@ -157,7 +157,7 @@ AutoSend();
 #if CONFIG_CC1100
 cc1100Initializtion();
 
-SendToRemot('a');
+//SendToRemot('a');
 
 #elif CONFIG_433SG
 InitDecode();

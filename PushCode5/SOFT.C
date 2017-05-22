@@ -427,7 +427,7 @@ uchar cmd;
 
 						Write_Param();				
 				#endif
-				
+				Motor.FlagPower=90; //3分钟
 				SetIdTime=0;
 		
 				}
@@ -447,7 +447,7 @@ uchar cmd;
 															case REMOT_COMMAND_MOT3_CW:
 																if(Motor.FlagPower>0)
 																			{
-																			Motor.FlagPower=120; //4分钟
+																			Motor.FlagPower=90; //3分钟
 																			Motor.FlagRuning=0;
 																			Motor.CommandType=COMMAND_C1;		//按第一路正转
 																			FlagAuto=1;//非点动方式
@@ -457,7 +457,7 @@ uchar cmd;
 															case REMOT_COMMAND_MOT3_CCW:
 																if(Motor.FlagPower>0)
 																			{
-																			Motor.FlagPower=120; //4分钟	
+																			Motor.FlagPower=90; //3分钟	
 																			Motor.FlagRuning=0;
 																			Motor.CommandType=COMMAND_CC1;		//按第一路反转
 																			FlagAuto=1;//非点动方式
@@ -466,7 +466,7 @@ uchar cmd;
 															break;								
 															case REMOT_COMMAND_POWER_ON:
 																//Motor.FlagPower=240; //8分钟
-																Motor.FlagPower=120; //4分钟	
+																Motor.FlagPower=90; //3分钟	
 															break;
 															case REMOT_COMMAND_POWER_OFF:
 																Motor.FlagPower=0;
@@ -476,6 +476,8 @@ uchar cmd;
 																			
 															break;
 															case REMOT_COMMAND_SET_RATE3:	//设置电流
+																Motor.FlagPower=90; //4分钟
+																
 															if(	FlagSetCurrent1==0)
 																		{
 															if((Motor.FlagRuning)&&(InputBuf==0x0f)&&(FlagInputZero))
@@ -484,6 +486,25 @@ uchar cmd;
 																							}
 																			}
 															break;
+															
+															//控制器在操作
+															case REMOT_COMMAND_MOT1_CW:
+															case REMOT_COMMAND_MOT1_CCW:	
+															case REMOT_COMMAND_MOT2_CW:
+															case REMOT_COMMAND_MOT2_CCW:
+															case REMOT_COMMAND_MOT1_CW_MOT2_CCW:
+															case REMOT_COMMAND_MOT2_CW_MOT1_CCW:
+															case REMOT_COMMAND_MOT1_MOT2_CW:
+															case REMOT_COMMAND_MOT1_MOT2_CCW:
+
+															//遥控器电源开着
+															case REMOT_COMMAND_REMOT_HAND_ON:
+															
+															Motor.FlagPower=90; //4分钟
+															
+															break;
+															
+															
 														}
 								}
 				LastCommand=cmd;								
@@ -896,6 +917,9 @@ static uchar tim1000ms;
 															//Motor.unPushTime=0;
 															SendToRemot(RESPONES_COMMPLETE);
 															SendToRemot(RESPONES_COMMPLETE);
+															SendToRemot(RESPONES_COMMPLETE);
+															SendToRemot(RESPONES_COMMPLETE);
+
 														}
 										break;
 										
@@ -945,6 +969,13 @@ static uchar tim1000ms;
 																				Motor.RunTime=MAX_RUN_TIME_sec-40;	//反转退到底后自动正转3秒
 																			#endif
 																		Motor.unPushTime=20;
+																		}
+																else{
+																		SendToRemot(RESPONES_COMMPLETE);
+																		SendToRemot(RESPONES_COMMPLETE);
+																		SendToRemot(RESPONES_COMMPLETE);
+																		SendToRemot(RESPONES_COMMPLETE);
+																	
 																		}
 													#endif
 													
@@ -1211,7 +1242,8 @@ void Work(void)
 									{
 									LED_RUN_ON;	//SetLed1
 									}
-					if(Motor.FlagRuning!=0)
+					//if(Motor.FlagRuning!=0)
+						if(Motor.CurrentType!=0)
 							{
 							SendToRemot(RESPONES_RUNING);	
 							}
