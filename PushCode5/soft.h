@@ -62,7 +62,10 @@ typedef double               FP64;
 #define REMOT_COMMAND_POWER_ON		0X39
 #define REMOT_COMMAND_POWER_OFF		0X49
 
-
+#define RESPONES_RUNING			0X68
+#define RESPONES_COMMPLETE		0X6A
+//整定电动顶紧电流
+#define REMOT_COMMAND_SET_RATE3		0X6C
 
 
 /**************************************************************************************************/
@@ -70,7 +73,6 @@ extern char bTimeBase;
 #define Setb_bTimeBase	bTimeBase=1;
 #define Clr_bTimeBase	bTimeBase=0;
 
-extern uchar FlagRuning;
 #define LED_RUN_ON			SetLed1
 #define LED_RUN_OFF			ClrLed1
 //#define LED_RECV_ON		;//SetLed2
@@ -87,7 +89,7 @@ extern uchar FlagRuning;
 #endif			
 			extern uchar LastCommand;	//上次命令
 			
-			extern uchar SamCommandTime;	//重复的命令时间	
+//			extern uchar SamCommandTime;	//重复的命令时间	
 			
 
  			
