@@ -51,9 +51,16 @@ typedef double               FP64;
 #define COMMAND_A3	0X71			//按一下第三路正转
 #define COMMAND_AA3	0X81			//按一下第三路反转		
 
+#define REMOT_COMMAND_MOT1_MOT2_CW	0X34
+#define REMOT_COMMAND_MOT1_MOT2_CCW	0X44
+
+
 //电动顶紧
-#define REMOT_COMMAND_MOT3_CW		0X51
-#define REMOT_COMMAND_MOT3_CCW		0X55
+//#define REMOT_COMMAND_MOT3_CW		0X51
+//#define REMOT_COMMAND_MOT3_CCW		0X55
+#define REMOT_COMMAND_MOT3_CW		REMOT_COMMAND_MOT1_MOT2_CW
+#define REMOT_COMMAND_MOT3_CCW		REMOT_COMMAND_MOT1_MOT2_CCW
+
 #define REMOT_COMMAND_MOT4_CW		0X52
 #define REMOT_COMMAND_MOT4_CCW		0X56
 #define REMOT_COMMAND_MOT3_MOT4_CW		0X53
@@ -75,16 +82,20 @@ extern char bTimeBase;
 
 #define LED_RUN_ON			SetLed1
 #define LED_RUN_OFF			ClrLed1
-//#define LED_RECV_ON		;//SetLed2
-//#define LED_RECV_OFF	;//ClrLed2
+#define LED_RECV_ON			SetLed2
+#define LED_RECV_OFF		ClrLed2
 
 
+#define LED_Al_Box		;//SetLed2
+#define LED_Fe_Box	;//ClrLed2
+
+extern unsigned char Time_LedRecv_LED;
 
 #if CONFIG_433SG
 			//LED自动熄灭
 			extern unsigned char Time_TestProc_LED1;
 			extern unsigned char Time_TestProc_LED2;
-			extern unsigned char Time_LedRecv_LED;
+			
 			extern uint PulseCount;
 #endif			
 			extern uchar LastCommand;	//上次命令
@@ -122,9 +133,10 @@ struct	struct_save
 };
 
 extern struct	struct_save *gpParam;
-#define Max_Param_Len		8
+//#define Max_Param_Len		8
+#define Max_Param_Len		10
 //参数已经初始化标记
-#define FlagParamInitnized	0xA7
+#define FlagParamInitnized	0xA8
 extern uchar gbParamBuf[Max_Param_Len+2];
 
 //参数的EEPROM区首地址

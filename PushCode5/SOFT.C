@@ -26,12 +26,13 @@
 uchar bTimeBase;
 
 ReInitCC1100Time=0;
+unsigned char Time_LedRecv_LED;
 
 #if CONFIG_433SG
 		//LED自动熄灭
 		unsigned char Time_TestProc_LED1;
 		unsigned char Time_TestProc_LED2;
-		unsigned char Time_LedRecv_LED;
+		
 		uint PulseCount=0;
 		
 #endif		
@@ -118,8 +119,10 @@ buf[4]=command;
 buf[5]='3';
 buf[6]='3';
 buf[7]=0x77;
-
-
+for(i=8;i<30;i++)
+{
+buf[i]='4';
+}
 //		if(1)	//if(WirelessDebugTime>0)
 //						{
 //						len=8;
@@ -173,9 +176,9 @@ void Default_ParamInit(void)
 
 	
 #if CONFIG_CC1100
-	gpParam->RemotName[0]=0x0;
-	gpParam->RemotName[1]=0x0;
-	gpParam->RemotName[2]=0x0;	
+	gpParam->RemotName[0]=0x35;
+	gpParam->RemotName[1]=0x35;
+	gpParam->RemotName[2]=0x36;	
 	gpParam->xxx[0]=0x0;
 	gpParam->xxx[1]=0x0;
 #elif CONFIG_433SG
@@ -222,7 +225,7 @@ void Default_ParamInit(void)
 		LastCommand=0;	//上次命令
 
 	
-	SetIdTime=200;
+	SetIdTime=80;  //8S
 	
 	
 }
@@ -440,6 +443,9 @@ uchar SetIdTime;
 			if((CompareCharChar(nm,"555",3)!=0)||(CompareCharChar(nm,&gpParam->RemotName[0],3)!=0))	//默认地址
 				{
 			//遥控器序号ok
+			LED_RECV_ON;
+			Time_LedRecv_LED=20;
+			
 					//	SendUartCommand(cmd);
 					if(LastCommand!=cmd)
 								{
@@ -469,7 +475,10 @@ uchar SetIdTime;
 															break;
 															case REMOT_COMMAND_POWER_OFF:
 																Motor.FlagPower=0;
-																			
+																Motor.FlagRuning=0;
+																Motor.CommandType=0;
+																Motor.CurrentType=0;
+																//SendToRemot(RESPONES_COMMPLETE);			
 															break;
 															case 99:	//设置电流
 															if((Motor.FlagRuning)&&(InputBuf==0x0f)&&(FlagInputZero))
@@ -493,6 +502,8 @@ if(cc1100Scanf(rx_buf))
 									{
 									//RecvAny_LED1_ON;
 									ReInitCC1100Time=0;
+									//LED_RECV_ON;
+									//Time_LedRecv_LED=20;
 				
 									ProcessRemotCommand(rx_buf);		//for CC1100
 //									ResponseTime=0;
@@ -757,6 +768,9 @@ void ProcessTimeOut(void)	//10MS命令保持
 //#define COMMAND_CONTINU_TIME_300  40
 #define COMMAND_CONTINU_TIME_300  30
 
+static uchar tim1000ms;
+
+
 //#if CONFIG_433SG
 //	if(SamCommandTime<253)SamCommandTime++;
 //#endif
@@ -779,26 +793,21 @@ void ProcessTimeOut(void)	//10MS命令保持
 
 		}
 		
-//超时自动关闭		
-	//if(Motor.timer_sec100<100)
-	if(Motor.timer_sec100<10)	
-			{
-				Motor.timer_sec100++;
-			}
-	else{
-			Motor.timer_sec100=0;
-			//if(Motor.RunTime<253)	//60s自动关掉	
-			if(Motor.RunTime<65530)	//60s自动关掉		
-				{
-					Motor.RunTime++;
-				}
+////////////////////////////////////////////	
+	if(tim1000ms<200)
+		{
+			tim1000ms++;
+		}
+	else{//到了2秒
+		tim1000ms=0;
+//			if(Motor.FlagRuning!=0)
+//					{
+//					SendToRemot(RESPONES_RUNING);	
+//					}		
+					
 				
-			if(Motor.FlagRuning!=0)
-					{
-					SendToRemot(RESPONES_RUNING);	
-					}
-/////////////////////////////
-			if(ReInitCC1100Time>200)//if(ReInitCC1100Time>30)
+		/////////////////////////////
+			if(ReInitCC1100Time>20)//if(ReInitCC1100Time>30)
 										{
 										Motor.FlagPower=0;
 										ReInitCC1100Time=0;
@@ -810,7 +819,21 @@ void ProcessTimeOut(void)	//10MS命令保持
 				else{
 						ReInitCC1100Time++;
 						}
-/////////////////////////////
+			}
+///////////////////////////////////////////////////////////	
+//超时自动关闭		
+	if(Motor.timer_sec100<10)	
+			{
+				Motor.timer_sec100++;
+			}
+	else{//100MS
+			Motor.timer_sec100=0;
+			if(SetIdTime>0)SetIdTime--;			//设置ID时间	
+			//if(Motor.RunTime<253)	//60s自动关掉	
+			if(Motor.RunTime<65530)	//60s自动关掉		
+				{
+					Motor.RunTime++;
+				}
 
 			}
 			
@@ -824,7 +847,7 @@ void ProcessTimeOut(void)	//10MS命令保持
 					Motor.FlagRuning=0;
 					Motor.CommandType=0;
 					Motor.CurrentType=0;
-					SendToRemot(RESPONES_COMMPLETE);
+					
 					}	
 		
 			if(FlagSetCurrent1==1)
@@ -1158,7 +1181,7 @@ void Work(void)
 				ProcessRfRecv();
 #endif				
 
-				if(SetIdTime>0)SetIdTime--;			//设置ID时间
+				
 				
 				ProcessTimeSoftStart();	//10MS软启动
 //				ProcessTestStep();
@@ -1166,13 +1189,13 @@ void Work(void)
 				ProcessTimeOut();	//10MS命令保持
 				
 
-#if CONFIG_433SG
+
 				LedContral();
-#endif		
+	
 				//chAdc_Resoult7
-				if(Motor.FlagRuning==1)
-							tim4=30;		//顶进 300ms闪烁
-				else  tim4=150;		//放松 1.5s闪烁
+				if(Motor.FlagRuning==2)
+							tim4=150;		//放松 1.5s闪烁
+				else  tim4=30;		//顶进 300ms闪烁
 				
 				tim++;
 				if(tim>tim4)
@@ -1181,10 +1204,17 @@ void Work(void)
 						AutoSend();
 						#endif
 						LED_RUN_ON;	//SetLed1
+						
+					if(Motor.FlagRuning!=0)
+							{
+							SendToRemot(RESPONES_RUNING);	
+							}
+						
+						
 					}
 				else if(tim>15)
 					{
-						if(Motor.FlagRuning!=0)
+						if((Motor.FlagRuning!=0)||(SetIdTime>0))
 										{
 											LED_RUN_OFF;
 										}
@@ -1193,10 +1223,12 @@ void Work(void)
 			//	if(KeybyteBuf&BIT3)	//K4_LVL
 					if(K4_LVL)
 								{
-									SetLed2;	//跳线不连接表示铝箱体
+									//SetLed2;	//跳线不连接表示铝箱体
+									LED_Al_Box;
 								}
 				else{
-								ClrLed2;	//跳线连接表示铁箱体
+								//ClrLed2;	//跳线连接表示铁箱体
+								LED_Fe_Box;
 						}
 #endif				
 				

@@ -156,6 +156,9 @@ AutoSend();
 
 #if CONFIG_CC1100
 cc1100Initializtion();
+
+SendToRemot('a');
+
 #elif CONFIG_433SG
 InitDecode();
 #endif		
@@ -204,9 +207,10 @@ Led1_Enable;
 K1_PULLUP;
 K2_PULLUP;
 K3_PULLUP;
-#if Config_Al_Box	
+
 Led2_Enable;	//选择铝箱体指示灯SetLed2
 
+#if Config_Al_Box	
 //选择铁箱体跳线
 K4_PULLUP;
 Select_Enable;
@@ -1137,7 +1141,7 @@ void AdcProcess(void)	//周期10mS
 }
 #endif //old_adc
 /////////
-#if CONFIG_433SG
+
 void LedContral(void)  /* 亮灭转换  */
 {
 	
@@ -1149,6 +1153,7 @@ void LedContral(void)  /* 亮灭转换  */
 											LED_RECV_OFF;	
 										}
 						}
+#if CONFIG_433SG						
 				if(Time_TestProc_LED1>0)
 						{
 							Time_TestProc_LED1--;
@@ -1166,9 +1171,9 @@ void LedContral(void)  /* 亮灭转换  */
 										}
 						}
 		
-
-}
 #endif
+}
+
 
 #if CONFIG_UART
 void TestUart2(void)
