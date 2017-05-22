@@ -6,8 +6,9 @@
 #include "Hd_ElecPush3.H"
 #include "Mega48_Adc.h"
 
+#include "CC1100.h"
 
-#if CONFIG_WIRELESS_DECODE
+#if CONFIG_433SG
   #include "Decode.h"
 #endif
 
@@ -24,16 +25,23 @@
 /**************************************************************************************************/
 uchar bTimeBase;
 
-#if CONFIG_WIRELESS_DECODE
+ReInitCC1100Time=0;
+
+#if CONFIG_433SG
 		//LED自动熄灭
 		unsigned char Time_TestProc_LED1;
 		unsigned char Time_TestProc_LED2;
 		unsigned char Time_LedRecv_LED;
 		uint PulseCount=0;
+		
+#endif		
 		uchar SamCommandTime;	//重复的命令时间
 		uchar LastCommand;	//上次命令
-		uint SetIdTime;			//设置ID时间
-#endif		
+
+		
+
+
+		uchar SetIdTime;			//设置ID时间
 
 
 uchar FlagSetCurrent1=0;
@@ -118,12 +126,20 @@ void Default_ParamInit(void)
 	gpParam->bCurrentRate=CURRENT_RATE;			//电机3的 5A
 	
 	
-#if CONFIG_WIRELESS_DECODE
+
+	
+#if CONFIG_CC1100
+	gpParam->RemotName[0]=0x0;
+	gpParam->RemotName[1]=0x0;
+	gpParam->RemotName[2]=0x0;	
+	gpParam->xxx[0]=0x0;
+	gpParam->xxx[1]=0x0;
+#elif CONFIG_433SG
 	gpParam->RemotName[0]=0x0;
 	gpParam->RemotName[1]=0x0;
 	gpParam->xxx[0]=0x0;
 	gpParam->xxx[1]=0x0;
-	#endif
+#endif	
 	gpParam->flag=FlagParamInitnized;		//参数已经初始化标记
 	
 	/////////
@@ -156,15 +172,19 @@ void Default_ParamInit(void)
 	FlagTestStep=0;
 	#endif
 	
-	#if CONFIG_WIRELESS_DECODE
-		SetIdTime=200;
+	#if CONFIG_433SG
 		SamCommandTime=0;	//连续键的时间
 		LastCommand=0;	//上次命令
 	#endif
+	
+	SetIdTime=200;
+	
+	
 }
 	
 ///////////
 
+//////////////////////////////////////////////////
 
 /////////////
 void AllJspOff(void)
@@ -257,26 +277,7 @@ void ProcessJspSwitch(void)		//旋转方向切换 极性
 											Motor.CommandType=0;	//执行后清除
 										}
 								break;								
-								/*
-								case COMMAND_C2:		//按住第二路正转
-								case COMMAND_A2:		//按一下第二路正转
-								JspOut3_ON;
-								JspOut4_OFF;
-								Motor.FlagRuning=1;
-								Motor.CurrentType=Motor.CommandType;		//当前对方向,转向
-								Motor.CommandType=0;	//执行后清除
-								break;
-								
-								case COMMAND_CC2:		//按住第二路反转
-								case COMMAND_AA2:			//按一下第二路反转
-								JspOut3_OFF;
-								JspOut4_ON;
-								Motor.FlagRuning=1;
-								Motor.CurrentType=Motor.CommandType;		//当前对方向,转向
-								Motor.CommandType=0;	//执行后清除
-								break;								
-								
-							*/
+
 			
 								
 								default:
@@ -292,7 +293,7 @@ void ProcessJspSwitch(void)		//旋转方向切换 极性
 /////
 
 /////////
-#if CONFIG_WIRELESS_DECODE
+#if CONFIG_433SG || CONFIG_CC1100
 void ProcessCommand(uchar command)
 {
 	
@@ -310,15 +311,15 @@ void ProcessCommand(uchar command)
 				Motor.timer_sec100=0;
 				Motor.RunTime=0;	//60s自动关掉
 				Motor.unPushTime=0;
-				#if CONFIG_FUNCTION_AUTO
 				
-								
-				//长按成为自动功能，放开继续，再按放开成为手动功能
-				if(SamCommandTime>150)
-					{
-					FlagAuto=1;//非点动方式
-					}
-				else FlagAuto=0;//点动方式
+				#if CONFIG_FUNCTION_AUTO
+						
+//				//长按成为自动功能，放开继续，再按放开成为手动功能
+//				if(SamCommandTime>150)
+//					{
+//					FlagAuto=1;//非点动方式
+//					}
+//				else FlagAuto=0;//点动方式
 					
 				FlagAuto=1;//非点动方式
 				
@@ -336,7 +337,114 @@ void ProcessCommand(uchar command)
 }
 #endif
 ///////
-#if CONFIG_WIRELESS_DECODE
+#if CONFIG_CC1100
+
+void ProcessRemotCommand(uchar *p)		//for CC1100
+{
+
+uchar i;
+
+uchar *nm;
+uchar cmd;
+
+uchar SetIdTime;
+
+/*
+			buf[4]=	command;	
+			buf[5]=	'6';	
+			buf[6]=	'6';
+			buf[7]=	0x70;
+	*/
+		if(*p<0x40)return;		//包号，1字节, 遥控器发送为"4xH"
+		if((*(p+7)!=0x70)&&(*(p+7)!=0x71))return;
+			
+		nm=p+1;
+		cmd=*(p+4);
+		//if(('6'==*(p+5))&&('6'==*(p+6))&&(*(p+7)==0x70))
+//		if(*(p+7)==0x70)	
+//			{//老式遥控器兼容
+//		}
+
+	if(SetIdTime>0)
+		{
+		
+		
+			//setid
+			if(cmd==REMOT_COMMAND_POWER_ON)
+					{
+					gpParam->RemotName[0]=*(nm);
+					gpParam->RemotName[1]=*(nm+1);
+					gpParam->RemotName[2]=*(nm+2);
+//					if(WirelessDebugTime>0)
+//						ResponseType=REMOT_COMMAND_DEBUG;
+//					else 	ResponseType=REMOT_COMMAND_SET_ID;	//0X59
+
+				#if CONFIG_SAVE5
+				for(i=0;i<Max_Param_Len;i++)
+					{
+					EEPROM_Write(EEPROM_BASE_ADR+i,gbParamBuf[i]);
+					}
+				#endif
+				
+				SetIdTime=0;
+		
+				}
+		}	
+	else{	
+			//非对码时间
+			if((CompareCharChar(nm,"555",3)!=0)||(CompareCharChar(nm,&gpParam->RemotName[0],3)!=0))	//默认地址
+				{
+			//遥控器序号ok
+					//	SendUartCommand(cmd);
+					switch(cmd)
+							{
+								case REMOT_COMMAND_MOT3_CW:
+								Motor.FlagRuning=0;
+								Motor.CommandType=COMMAND_C1;		//按第一路正转
+								FlagAuto=1;//非点动方式
+								ProcessCommand(Motor.CommandType);		//for CC1100
+								break;
+								case REMOT_COMMAND_MOT3_CCW:
+								Motor.FlagRuning=0;
+								Motor.CommandType=COMMAND_CC1;		//按第一路反转
+								FlagAuto=1;//非点动方式
+								ProcessCommand(Motor.CommandType);		//for CC1100
+								break;								
+								
+								case 99:
+								if((Motor.FlagRuning)&&(InputBuf==0x0f)&&(FlagInputZero))
+																{
+																	FlagSetCurrent1=1;
+																}
+								break;
+							}
+					
+				}
+		}
+
+	
+}
+///////////////////
+
+void ProcessRfRecv(void)
+{
+if(cc1100Scanf(rx_buf))
+									{
+									//RecvAny_LED1_ON;
+									ReInitCC1100Time=0;
+				
+									ProcessRemotCommand(rx_buf);		//for CC1100
+//									ResponseTime=0;
+//									#if CONFIG_TEST_COMMAND_ENDCODE
+//									for(i=0;i<CC1100_PKT_LEN;i++)
+//							        	{
+//							        	Uart0CharSend(rx_buf[i]);	
+//							        	}
+//									#endif
+				        	}
+}
+
+#elif CONFIG_433SG
 void ProcessRfRecv(void)
 {
 	uchar i;
@@ -450,14 +558,13 @@ temp=(0XF0&PINB);		//结果
 }
 /////
 void ProcessKey(uchar in,uchar old)
-{//CONFIG_WIRELESS_DECODE
+{
 		#if CONFIG_FUNCTION_AUTO
 		
 		if( (in&BIT0)!=(old&BIT0) )	//是边沿
 			{
 				if((in&BIT0)==0)
 					{	//k1
-						//if(Motor.FlagRuning==0)
 							if(Motor.FlagRuning!=1)
 							{
 								Motor.FlagRuning=0;
@@ -471,12 +578,6 @@ void ProcessKey(uchar in,uchar old)
 							Motor.RunTime=0;	//60s自动关掉
 							Motor.unPushTime=0;
 							}
-							/*
-					else{
-							Motor.FlagRuning=0;
-							Motor.CurrentType=0;
-							//LastCommand=
-							}	*/	
 					}
 				}
 	
@@ -497,13 +598,6 @@ void ProcessKey(uchar in,uchar old)
 							Motor.RunTime=0;	//60s自动关掉
 							Motor.unPushTime=0;
 							}
-							/*
-					else{
-							Motor.FlagRuning=0;
-							Motor.CurrentType=0;
-							//LastCommand=
-							}	
-							*/
 					}
 				}		
 ////				
@@ -619,7 +713,7 @@ void ProcessTimeOut(void)	//10MS命令保持
 //#define COMMAND_CONTINU_TIME_300  40
 #define COMMAND_CONTINU_TIME_300  30
 
-#if CONFIG_WIRELESS_DECODE
+#if CONFIG_433SG
 	if(SamCommandTime<253)SamCommandTime++;
 #endif
 
@@ -632,7 +726,7 @@ void ProcessTimeOut(void)	//10MS命令保持
 					Motor.FlagRuning=0;
 					Motor.CurrentType=0;
 					}
-		#if CONFIG_WIRELESS_DECODE
+		#if CONFIG_433SG
 			SamCommandTime=0;	//age
 			LastCommand=0;		
 		#endif
@@ -652,6 +746,19 @@ void ProcessTimeOut(void)	//10MS命令保持
 				{
 					Motor.RunTime++;
 				}
+/////////////////////////////
+				if(ReInitCC1100Time>30)
+										{
+										ReInitCC1100Time=0;
+							
+												#if CONFIG_CC1100
+															cc1100Initializtion();
+												#endif		
+										}
+				else{
+						ReInitCC1100Time++;
+						}
+/////////////////////////////
 
 			}
 			
@@ -834,7 +941,7 @@ void ParamSend(void)
 	len		+=	MakeValAsc8("I2=",gpParam->bCurrentBackward,",",&buf[len]);	//
 	len		+=	MakeValAsc8("k=",gpParam->bCurrentRate,",",&buf[len]);	//
 	
-	#if CONFIG_WIRELESS_DECODE
+	#if CONFIG_433SG
 	len		+=	PutString("ID=",&buf[len],5);
 	buf[len]=HexToAsc(gpParam->RemotName[0]>>4);
 	len++;
@@ -896,7 +1003,7 @@ void AutoSend(void)
 			len++;
 	#endif
 	///
-	#if CONFIG_WIRELESS_DECODE
+	#if CONFIG_433SG
 			buf[len]=',';
 			len++;
 			len		+=	PutString("Pu=",&buf[len],5);
@@ -930,7 +1037,7 @@ len		+=	PutString("\r\n",&buf[len],5);
 SendText_UART0(buf);
 		
 }
-#if CONFIG_WIRELESS_DECODE
+#if CONFIG_433SG
 void RemotCodeSend(uchar *command1,uchar comlen1)
 {
 	uchar len;
@@ -983,25 +1090,27 @@ void Work(void)
 		if(bTimeBase)	//程序时间到标记	10ms
 				{	
 				bTimeBase=0;
-				//#if CONFIG_WIRELESS_DECODE == 0
+
 				//#if CONFIG_TEST_FREQ_PIN
 				//Not_TEST_FREQ_PIN;
 				//#endif	
-				//#endif					
+					
 				AdcProcess();
 				CheckKey();		//周期10ms
 				CheckInput();
-#if CONFIG_WIRELESS_DECODE
+#if CONFIG_433SG || CONFIG_CC1100
 				ProcessRfRecv();
-				if(SetIdTime>0)SetIdTime--;			//设置ID时间
 #endif				
+
+				if(SetIdTime>0)SetIdTime--;			//设置ID时间
+				
 				ProcessTimeSoftStart();	//10MS软启动
 //				ProcessTestStep();
 				ProcessJspSwitch();		//旋转方向切换 极性
 				ProcessTimeOut();	//10MS命令保持
 				
 
-#if CONFIG_WIRELESS_DECODE
+#if CONFIG_433SG
 				LedContral();
 #endif		
 				//chAdc_Resoult7

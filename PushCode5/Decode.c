@@ -4,7 +4,7 @@
 
 
 
-#if CONFIG_WIRELESS_DECODE
+#if CONFIG_433SG
 
 #include "soft.h"
 #include "main.h"

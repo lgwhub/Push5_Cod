@@ -6,11 +6,7 @@
 #include "Soft.h"
 #include "Mega48_Adc.h"
 
-/*
-#if CONFIG_WIRELESS_DECODE
-  #include "Decode.h"
-#endif
-*/
+
 
 #include "Hd_ElecPush3.H"
 
@@ -81,7 +77,8 @@ uchar i;
 //		
 
 		//Big Error  clred
-for(i=0; i <= FIRST_ADC_CH - LAST_ADC_CH; i++)
+//for(i=0; i <= FIRST_ADC_CH - LAST_ADC_CH; i++)
+for(i=0; i <= LAST_ADC_CH - FIRST_ADC_CH; i++)
 		{
 			Adc.sum[i]	=	0;		
 		}

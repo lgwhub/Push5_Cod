@@ -18,7 +18,7 @@ while(len<max_ps)
 return len;   /* 指向pd的0X00位  */
 }
 ///
-/*
+
 uchar CompareCharChar(uchar *chr1,uchar *chr2,uchar len)
 {
  uchar i;
@@ -30,7 +30,7 @@ uchar CompareCharChar(uchar *chr1,uchar *chr2,uchar len)
     };
 return 1;
 }
-*/
+
 ///////////
 
 uchar MakeValAsc8(uchar *StrHead,uchar Val,uchar *StrEnd,uchar *out)	//8位变量转换为十进制的ASC码，有前后缀

@@ -51,6 +51,19 @@ typedef double               FP64;
 #define COMMAND_A3	0X71			//按一下第三路正转
 #define COMMAND_AA3	0X81			//按一下第三路反转		
 
+//电动顶紧
+#define REMOT_COMMAND_MOT3_CW		0X51
+#define REMOT_COMMAND_MOT3_CCW		0X55
+#define REMOT_COMMAND_MOT4_CW		0X52
+#define REMOT_COMMAND_MOT4_CCW		0X56
+#define REMOT_COMMAND_MOT3_MOT4_CW		0X53
+#define REMOT_COMMAND_MOT3_MOT4_CCW		0X57
+////////////////
+#define REMOT_COMMAND_POWER_ON		0X39
+#define REMOT_COMMAND_POWER_OFF		0X49
+
+
+
 
 /**************************************************************************************************/
 extern char bTimeBase;
@@ -65,16 +78,21 @@ extern uchar FlagRuning;
 
 
 
-#if CONFIG_WIRELESS_DECODE
+#if CONFIG_433SG
 			//LED自动熄灭
 			extern unsigned char Time_TestProc_LED1;
 			extern unsigned char Time_TestProc_LED2;
 			extern unsigned char Time_LedRecv_LED;
-			extern uchar LastCommand;	//上次命令
-			extern uint SetIdTime;			//设置ID时间
 			extern uint PulseCount;
-			extern uchar SamCommandTime;	//重复的命令时间
-#endif
+#endif			
+			extern uchar LastCommand;	//上次命令
+			
+			extern uchar SamCommandTime;	//重复的命令时间	
+			
+
+ 			
+			extern uchar SetIdTime;			//设置ID时间
+
 
 
 
@@ -89,9 +107,12 @@ struct	struct_save
 		uchar bCurrentBackward;			//工作电流2(uint=0.2A)
 		uchar bCurrentRate;			//电流测量比例200-206-220(uint=0.2A)		
 		
-		#if CONFIG_WIRELESS_DECODE
-		uchar RemotName[2];
-		uchar xxx[2];
+		#if CONFIG_433SG 
+				uchar RemotName[2];
+				uchar xxx[2];
+		#elif CONFIG_CC1100
+				uchar RemotName[3];
+				uchar xxx[2];
 		#endif
 		
 		
@@ -113,7 +134,7 @@ extern uchar gbParamBuf[Max_Param_Len+2];
 void ParamSend(void);
 void AutoSend(void);
 void SendText_UART0(INT8U *StrData);
-	#if CONFIG_WIRELESS_DECODE
+	#if CONFIG_433SG
 			void RemotCodeSend(uchar *command1,uchar comlen1);
 	#endif
 #endif

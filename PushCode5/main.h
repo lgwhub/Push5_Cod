@@ -8,7 +8,7 @@ void work(void);  /*  在PC上也可以运行  */
 void LedStart(void);
 /* 亮灭转换  */
 
-#if CONFIG_WIRELESS_DECODE
+#if CONFIG_433SG
 void LedContral(void);
 #endif
 /////////

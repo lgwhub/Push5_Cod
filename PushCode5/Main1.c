@@ -3,10 +3,10 @@
 #include "Soft.h"
 #include "Mega48_Adc.h"
 
+#include "CC1100.h"
 
-#if CONFIG_WIRELESS_DECODE
-  #include "Decode.h"
-#endif
+
+
 
 #include "Hd_ElecPush3.H"
 
@@ -21,17 +21,17 @@
 #if CONFIG_UART
 	#include "LoopBuf.h"
 #endif
-
-
+#if CONFIG_433SG
+  #include "Decode.h"
+		void Init_ext_Int1(void);
+	#endif
 
 void Init_Hd(void);
 
 void InitOutLevelDefault(void);
 //////////////////////////////
 //void TestUart2(void);
-#if CONFIG_WIRELESS_DECODE
-		void Init_ext_Int1(void);
-	#endif
+
 
 
  
@@ -57,14 +57,7 @@ struct adc_struct
 
 
 /////////////
-//void DefaultSet(void)
-//{
-//#if CONFIG_WIRELESS_DECODE
-//SamCommandTime=255;	//重复的命令时间
-//LastCommand=0;	//上次命令
-//SetIdTime=1000;			//设置ID时间
-//#endif
-//}		
+	
 //
 void DelayMs(unsigned char x)
 {
@@ -154,13 +147,16 @@ LedStart();
 SendText_UART0("***Push3**\r\n");
 ParamSend();
 AutoSend();
-		#if CONFIG_WIRELESS_DECODE
+		#if CONFIG_433SG
 				RemotCodeSend("12345",5);
 		#endif
 #endif
 ///////////////////
 //LedStart(); 
-#if CONFIG_WIRELESS_DECODE
+
+#if CONFIG_CC1100
+cc1100Initializtion();
+#elif CONFIG_433SG
 InitDecode();
 #endif		
 
@@ -217,7 +213,7 @@ Select_Enable;
 Select_Low;
 #endif
 //
-		#if CONFIG_WIRELESS_DECODE == 0
+		#if CONFIG_433SG == 0
 				#if CONFIG_TEST_FREQ_PIN
 				Enable_TEST_FREQ_PIN;	//单片机频率测试Not_TEST_FREQ_PIN;
 				#endif
@@ -377,7 +373,7 @@ UBRR0H	=	(baud>>8)&0XFF;
 
 /////
 
-#if CONFIG_WIRELESS_DECODE
+#if CONFIG_433SG
 void Init_ext_Int1(void)//遥控器接收中断
 {
 PORTD	|=	BIT3;		//EX_INT1	PORTD3
@@ -595,7 +591,7 @@ Init_Uart(BAUD_DEFINE(9200),0);
 	//InitAdc();
 	Init_Timer0();
 	Init_Timer1_PWM();
-	#if CONFIG_WIRELESS_DECODE
+	#if CONFIG_433SG
 	Init_ext_Int1();	//遥控器接收中断
 	#endif
 SREG	|=	0X80;					//使能总中断
@@ -679,7 +675,7 @@ void ext_int1_isr(void)
 #endif
 {
 //EIMSK	&=	(~BIT1);	//MEGA88	
-#if CONFIG_WIRELESS_DECODE
+#if CONFIG_433SG
 		uchar temp;	//当前时刻
 		temp=TCNT0;	//timer0
 		DecodePulse(temp);
@@ -779,7 +775,7 @@ void timer0_compb_isr(void)
 	OCR0B	+=		TIMER_10MS_8BIT;
 	bTimeBase	=	1;	//程序时间到标记
 				
-		#if CONFIG_WIRELESS_DECODE == 0
+		#if CONFIG_433SG == 0
 				#if CONFIG_TEST_FREQ_PIN
 				Not_TEST_FREQ_PIN;	//单片机频率测试Enable_TEST_FREQ_PIN;
 				#endif
@@ -795,7 +791,7 @@ __interrupt void time0_ovf_isr(void)
 void time0_ovf_isr(void)
 #endif
 {
-#if CONFIG_WIRELESS_DECODE
+#if CONFIG_433SG
 		DecodeTimeout++;
 #endif		
 
@@ -1141,7 +1137,7 @@ void AdcProcess(void)	//周期10mS
 }
 #endif //old_adc
 /////////
-#if CONFIG_WIRELESS_DECODE
+#if CONFIG_433SG
 void LedContral(void)  /* 亮灭转换  */
 {
 	

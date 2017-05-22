@@ -7,8 +7,12 @@
 #define CONFIG_UART			1
 //保存参数，ID号
 #define CONFIG_SAVE5		1
+
 //配置单向无线电接收器
-#define CONFIG_WIRELESS_DECODE		0
+#define CONFIG_CC1100		1
+//配置单向无线电接收器
+#define CONFIG_433SG		0
+#define CC1100_PKT_LEN 32
 
 //防止橡皮圈压得太紧，反转退到底后自动正转一点，放松
 #define CONFIG_UNPUSH		1

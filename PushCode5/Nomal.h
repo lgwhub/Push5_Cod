@@ -38,7 +38,7 @@
 
 
 
-//uchar CompareCharChar(uchar *chr1,uchar *chr2,uchar len);
+uchar CompareCharChar(uchar *chr1,uchar *chr2,uchar len);
 uchar MakeValAsc8(uchar *StrHead,uchar Val,uchar *StrEnd,uchar *out);	//8位变量转换为十进制的ASC码，有前后缀
 //uchar MakeValAsc16(uchar *StrHead,uint16 Val,uchar *StrEnd,uchar *out,uchar point);	//16位变量转换为十进制的ASC码，有前后缀
 //uchar MakeValAsc32(uchar *StrHead,uint32 Val,uchar *StrEnd,uchar *out,uchar point);	//32位变量转换为十进制的ASC码，有前后缀
