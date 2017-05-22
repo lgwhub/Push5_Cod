@@ -225,8 +225,8 @@ void Default_ParamInit(void)
 		LastCommand=0;	//上次命令
 
 	
-	SetIdTime=70;  //7S
-	
+	//SetIdTime=70;  //7S
+	SetIdTime=0;  //7S
 	
 }
 	
@@ -416,7 +416,7 @@ uchar cmd;
 	
 
 			//setid
-			if(cmd==REMOT_COMMAND_SHIFT_SET_ID)//REMOT_COMMAND_POWER_ON)
+			if(cmd==REMOT_COMMAND_POWER_ON)//REMOT_COMMAND_SHIFT_SET_ID)
 					{
 					gpParam->RemotName[0]=*(nm);
 					gpParam->RemotName[1]=*(nm+1);
@@ -595,12 +595,16 @@ void CheckInput(void)
 static uchar old;
 uchar temp;									
 
-PORTB|=0xf0;
-temp=(0XF0&PINB);		//结果
+PORTB|=0x30;  //PB4 PB5
+PORTC|=0x03;  //PC0,PC1
+temp=(0X30&PINB);		//结果
+temp>>=2;
+temp|=(PORTC&0x03);
+
+
 		if(old==temp)
 					{
-						//InputBuf=temp>>4;
-						InputBuf=(~temp)>>4;	//取反
+						InputBuf=temp;//(~temp);	//取反
 						if(InputBuf==0)FlagInputZero=1;
 					}
 		else{ 	
@@ -734,6 +738,15 @@ void ProcessKey(uchar in,uchar old)
 												}
 										}
 						}			
+			
+			if( (in&BIT4)!=(old&BIT4) )	//是边沿
+						{
+							if((in&BIT4)==0)
+										{			
+											SetIdTime=70;  //7S		
+										}
+						}	
+						
 			//ProcessCommand(Motor.CommandType);
 }
 
@@ -758,6 +771,10 @@ void CheckKey(void)		//周期10ms
 				else	KeybyteCur	&=	(~BIT3);					
 	#endif
 	*/
+			
+				if(K5_LVL)
+						KeybyteCur	|=	BIT4;
+				else	KeybyteCur	&=	(~BIT4);					
 
 		
 	

@@ -210,13 +210,9 @@ K3_PULLUP;
 
 Led2_Enable;	//选择铝箱体指示灯SetLed2
 
-#if Config_Al_Box	
-//选择铁箱体跳线
-K4_PULLUP;
-Select_Enable;
-Select_Low;
-#endif
-//
+K4_PULLUP;		//选择铁箱体跳线
+K5_PULLUP;
+
 		#if CONFIG_433SG == 0
 				#if CONFIG_TEST_FREQ_PIN
 				Enable_TEST_FREQ_PIN;	//单片机频率测试Not_TEST_FREQ_PIN;
