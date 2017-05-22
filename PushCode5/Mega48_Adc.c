@@ -72,11 +72,21 @@ uchar i;
 	//Adc.max1	=	0;
 	//Adc.min1	=	65535;
 	
-for(i=FIRST_ADC_CH;i<=LAST_ADC_CH;i++)
+	
+		//Big Error   Adc.sum范围为6-7
+//for(i=FIRST_ADC_CH;i<=LAST_ADC_CH;i++)
+//		{
+//			Adc.sum[i]	=	0;		
+//		}
+//		
+
+		//Big Error  clred
+for(i=0; i <= FIRST_ADC_CH - LAST_ADC_CH; i++)
 		{
 			Adc.sum[i]	=	0;		
 		}
-		
+//////////////////////////////////
+
 	Adc.complete	=	0;
 	Adc.number	=	1;
 	Adc.ch=FIRST_ADC_CH;
@@ -113,7 +123,8 @@ uchar xxx;
 			
 			//temp16=((Adc.sum7>>4)*33)>>8;	//(UINT=100mA)
 			//temp16=((Adc.sum7>>4)*330)>>8;	//(UINT=10mA) max=1980mA
-			temp16=(Adc.sum[7]>>4);	
+			//temp16=(Adc.sum[7]>>4);				//Big Error   Adc.sum范围为6-7
+			temp16=(Adc.sum[LAST_ADC_CH - FIRST_ADC_CH]>>4);		//Big Error  clred
 			if(FlagSetCurrent1==2)
 					{//10A,显示50
 				if(temp16>25)		//相当于RATE<256

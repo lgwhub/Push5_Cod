@@ -57,14 +57,14 @@ struct adc_struct
 
 
 /////////////
-void DefaultSet(void)
-{
-#if CONFIG_WIRELESS_DECODE
-SamCommandTime=255;	//重复的命令时间
-LastCommand=0;	//上次命令
-SetIdTime=1000;			//设置ID时间
-#endif
-}		
+//void DefaultSet(void)
+//{
+//#if CONFIG_WIRELESS_DECODE
+//SamCommandTime=255;	//重复的命令时间
+//LastCommand=0;	//上次命令
+//SetIdTime=1000;			//设置ID时间
+//#endif
+//}		
 //
 void DelayMs(unsigned char x)
 {
@@ -134,7 +134,7 @@ WDTCSR=0X0F;
 asm("wdr");
 #endif
 
-DefaultSet();
+//DefaultSet();
 Default_ParamInit();	//Init_Param();
 #if CONFIG_SAVE5
 Load_Param();		//取设定值
@@ -954,8 +954,11 @@ temp16 =ADCH;
 //temp16	=	ADCL;
 //temp16	+=	ADCH<<8;
 
-
-Adc.sum[Adc.ch]	+=	temp16;	
+if(Adc.ch<=LAST_ADC_CH)	//Big Error   Adc.sum范围为6-7
+	{
+		//Adc.sum[Adc.ch]	+=	temp16;	   //Big Error   Adc.sum范围为6-7
+		Adc.sum[Adc.ch - FIRST_ADC_CH]	+=	temp16;			//Big Error  clred
+		}
 if(Adc.ch<LAST_ADC_CH)
 	{
 		Adc.ch++;
